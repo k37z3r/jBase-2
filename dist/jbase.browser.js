@@ -1,10 +1,10 @@
 /**
  * @k37z3r/jbase - A modern micro-framework for the web: jBase offers the familiar syntax of classic DOM libraries, but without their baggage. Fully typed, modular, and optimized for modern browser engines.
- * @version 2.0.3
- * @homepage https://github.com/k37z3r/jBase-2.0
- * @author Sven Minio (https://github.com/k37z3r/jBase-2.0)
+ * @version 2.1.1
+ * @homepage https://github.com/k37z3r/jBase-2
+ * @author Sven Minio (https://github.com/k37z3r/jBase-2)
  * @license GPL-3.0-or-later
- * @copyright 2026 Sven Minio (https://github.com/k37z3r/jBase-2.0)
+ * @copyright 2026 Sven Minio (https://github.com/k37z3r/jBase-2)
  */
 "use strict";
 (() => {
@@ -170,24 +170,46 @@
     css: () => css
   });
   function css(property, value) {
-    if (value === void 0) {
-      const el = this[0];
-      if (el instanceof HTMLElement || el instanceof SVGElement) {
-        const doc = el.ownerDocument;
-        const win = doc ? doc.defaultView : null;
-        if (win) {
-          return win.getComputedStyle(el)[property];
-        } else {
-          return el.style[property] || "";
+    if (typeof property === "object" && property !== null) {
+      this.forEach((el) => {
+        if (el instanceof HTMLElement || el instanceof SVGElement) {
+          for (const key in property) {
+            if (Object.prototype.hasOwnProperty.call(property, key)) {
+              if (key.includes("-")) {
+                el.style.setProperty(key, String(property[key]));
+              } else {
+                el.style[key] = property[key];
+              }
+            }
+          }
         }
-      }
-      return "";
+      });
+      return this;
     }
-    this.forEach((el) => {
-      if (el instanceof HTMLElement || el instanceof SVGElement) {
-        el.style[property] = value;
+    if (typeof property === "string") {
+      if (value === void 0) {
+        const el = this[0];
+        if (el instanceof HTMLElement || el instanceof SVGElement) {
+          const doc = el.ownerDocument;
+          const win = doc ? doc.defaultView : null;
+          if (win) {
+            return win.getComputedStyle(el).getPropertyValue(property) || win.getComputedStyle(el)[property] || "";
+          } else {
+            return el.style[property] || "";
+          }
+        }
+        return "";
       }
-    });
+      this.forEach((el) => {
+        if (el instanceof HTMLElement || el instanceof SVGElement) {
+          if (property.includes("-")) {
+            el.style.setProperty(property, String(value));
+          } else {
+            el.style[property] = value;
+          }
+        }
+      });
+    }
     return this;
   }
   var init_styles = __esm({
@@ -195,7 +217,7 @@
       "use strict";
       /**
        * @file src/modules/css/styles.ts
-       * @version 2.0.2
+       * @version 2.0.3
        * @since 2.0.0
        * @license GPL-3.0-or-later
        * @copyright Sven Minio 2026
@@ -576,6 +598,8 @@
   var attributes_exports = {};
   __export(attributes_exports, {
     attr: () => attr,
+    prop: () => prop,
+    removeAttr: () => removeAttr,
     val: () => val
   });
   function attr(name, value) {
@@ -603,12 +627,30 @@
     });
     return this;
   }
+  function removeAttr(name) {
+    this.forEach((el) => {
+      if (el instanceof Element) el.removeAttribute(name);
+    });
+    return this;
+  }
+  function prop(name, value) {
+    if (value === void 0) {
+      const el = this[0];
+      return el instanceof Element ? el[name] : void 0;
+    }
+    this.forEach((el) => {
+      if (el instanceof Element) {
+        el[name] = value;
+      }
+    });
+    return this;
+  }
   var init_attributes = __esm({
     "src/modules/dom/attributes.ts"() {
       "use strict";
       /**
        * @file src/modules/dom/attributes.ts
-       * @version 2.0.2
+       * @version 2.1.0
        * @since 2.0.0
        * @license GPL-3.0-or-later
        * @copyright Sven Minio 2026
@@ -1707,14 +1749,14 @@
       throw new Error(`HTTP Error: ${response.status}`);
     }
     const text2 = await response.text();
-    return text2 ? JSON.parse(text2) : {};
+    return text2;
   }
   var init_get = __esm({
     "src/modules/http/get.ts"() {
       "use strict";
       /**
        * @file src/modules/http/get.ts
-       * @version 2.0.3
+       * @version 2.0.4
        * @since 2.0.0
        * @license GPL-3.0-or-later
        * @copyright Sven Minio 2026
@@ -1886,7 +1928,7 @@
       init_data();
       /**
        * @file src/index.ts
-       * @version 2.0.2
+       * @version 2.1.1
        * @since 2.0.0
        * @license GPL-3.0-or-later
        * @copyright Sven Minio 2026

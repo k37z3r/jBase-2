@@ -28,6 +28,6 @@
 export declare const http: {
     post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
     get<T>(url: string, option?: RequestInit): Promise<T>;
-    getText<T>(url: string, option?: RequestInit): Promise<T>;
+    getText<T = string>(url: string, option?: RequestInit): Promise<T>;
 };
 //# sourceMappingURL=index.d.ts.map

@@ -67,5 +67,7 @@ export declare const domMethods: {
     text(this: import("../..").JBaseClass, content?: string): string | import("../..").JBaseClass;
     attr(this: import("../..").JBaseClass, name: string, value?: string): string | null | import("../..").JBaseClass;
     val(this: import("../..").JBaseClass, value?: string): string | import("../..").JBaseClass;
+    removeAttr(this: import("../..").JBaseClass, name: string): import("../..").JBaseClass;
+    prop(this: import("../..").JBaseClass, name: string, value?: any): any | import("../..").JBaseClass;
 };
 //# sourceMappingURL=index.d.ts.map

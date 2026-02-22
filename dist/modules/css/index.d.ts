@@ -17,7 +17,7 @@
  * * Aggregation of all CSS methods. This object bundles functions for class manipulation and style manipulation. It is exported to extend the jBase prototype centrally via Object.assign.
  */
 export declare const cssMethods: {
-    css(this: import("../..").JBaseClass, property: string, value?: string | number): string | import("../..").JBaseClass;
+    css(this: import("../..").JBaseClass, property: string | Record<string, string | number>, value?: string | number): string | import("../..").JBaseClass;
     addClass(this: import("../..").JBaseClass, ...classNames: string[]): import("../..").JBaseClass;
     removeClass(this: import("../..").JBaseClass, ...classNames: string[]): import("../..").JBaseClass;
     toggleClass(this: import("../..").JBaseClass, className: string): import("../..").JBaseClass;

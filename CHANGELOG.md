@@ -62,3 +62,10 @@ All notable changes to this project will be documented in this file.
 * **CSS Module (`css/styles.ts`):** Enhanced the `css()` method to support passing an object (`Record<string, string | number>`) for setting multiple CSS properties simultaneously (e.g., `css({'background-color': 'blue', 'font-size': '14px'})`). 
 * **CSS Module (`css/styles.ts`):** Improved handling of kebab-case property names inside the `css()` method by utilizing `style.setProperty()` for greater robustness.
 * **HTTP Module (`http/get.ts`):** Fixed a critical bug in `getText()` where it incorrectly attempted to parse the response with `JSON.parse()` instead of returning the raw text. It now safely returns the raw string/HTML as intended.
+
+## [2.1.2] - 2026-02-22
+
+### 🛡️ Fixed (Core & Browser Scope)
+
+* **Core (`src/index.ts`):** Fixed an architectural bug where the `http` and `data` modules were not accessible via the main `$` wrapper (e.g., `$.http` or `$.data`) as documented in the wiki. They are now properly attached to the `init` factory function using `Object.assign()`.
+* **Browser Module (`src/browser.ts`):** Removed the unintended global `window.http` export to prevent global namespace pollution. The HTTP module must now be accessed exclusively through the framework instance (e.g., `$.http` or `jBase.http`).

@@ -1,6 +1,6 @@
 {
     "name": "@k37z3r/jbase",
-    "version": "2.0.3",
+    "version": "2.1.1",
     "description": "A modern micro-framework for the web: jBase offers the familiar syntax of classic DOM libraries, but without their baggage. Fully typed, modular, and optimized for modern browser engines.",
     "private": false,
     "main": "./dist/index.cjs",
@@ -20,18 +20,18 @@
         "build": "npm run build:browser",
         "prepublishOnly": "npm run build"
     },
-    "author": "Sven Minio (https://github.com/k37z3r/jBase-2.0)",
-    "homepage": "https://github.com/k37z3r/jBase-2.0",
+    "author": "Sven Minio (https://github.com/k37z3r/jBase-2)",
+    "homepage": "https://github.com/k37z3r/jBase-2",
     "funding": {
         "type": "paypal",
         "url": "https://www.paypal.com/donate/?hosted_button_id=PAE6M49YXLHUU"
     },
     "bugs": {
-        "url": "https://github.com/k37z3r/jBase-2.0/issues"
+        "url": "https://github.com/k37z3r/jBase-2/issues"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/k37z3r/jBase-2.0.git"
+        "url": "https://github.com/k37z3r/jBase-2.git"
     },
     "license": "GPL-3.0-or-later",
     "dependencies": {

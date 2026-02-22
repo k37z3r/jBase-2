@@ -21,19 +21,19 @@ All notable changes to this project will be documented in this file.
 
 ### ⚡ Performance
 
-* **Data Module (`objects.ts`):** Optimized search algorithms in `find.first`, `find.last`, `find.key`, and `find.value`. moved query normalization (`toLowerCase()`) outside of loops to significantly reduce CPU overhead.
+* **Data Module (`data/objects.ts`):** Optimized search algorithms in `find.first`, `find.last`, `find.key`, and `find.value`. moved query normalization (`toLowerCase()`) outside of loops to significantly reduce CPU overhead.
 * **Effects Module:** Added server-guards (`if (!isBrowser())`) to `fade.ts`, `slide.ts`, and `vertical.ts`. Animation logic is now skipped on the server to save resources.
 
 ### 🛡️ Fixed (Stability & Logic)
 
 * **Core (`core.ts`):** Added crash protection for invalid CSS selectors. `$(...)` now catches `DOMException` errors internally and logs a warning instead of crashing.
-* **DOM Manipulation (`manipulation.ts`):**
+* **DOM Manipulation (`dom/manipulation.ts`):**
 * Rewrote `unwrap()` using a `Set` to safely handle parent removal without conflicts on sibling elements.
 * Replaced global `window.document` usage with a `getDoc(this)` helper to prevent `ReferenceError` crashes in Node.js.
 
 
 * **HTTP Module (`http/*.ts`):** Fixed potential crash when parsing JSON from `200 OK` responses that contain an empty body.
-* **CSS Module (`styles.ts`):** Updated `css()` getter to access `getComputedStyle` via `el.ownerDocument` instead of global `window`.
+* **CSS Module (`css/styles.ts`):** Updated `css()` getter to access `getComputedStyle` via `el.ownerDocument` instead of global `window`.
 
 ### 🔧 Changed & Cleaned
 
@@ -48,3 +48,17 @@ All notable changes to this project will be documented in this file.
 
 * **HTTP Module (`http/get.ts`):** Enforce GET method in get() and getText() utility. Overrides method to 'GET' if 'POST' is passed in options.
 * **HTTP Module (`http/post.ts`):** Enforce POST method in post() utility. Overrides method to 'POST' if 'GET' is passed in options.
+
+
+## [2.1.1] - 2026-02-22
+
+### 🚀 Added (DOM Attributes)
+
+* **Attributes Module (`dom/attributes.ts`):** Added `removeAttr()` method to safely remove HTML attributes from all elements in a selection.
+* **Attributes Module (`dom/attributes.ts`):** Added `prop()` method for getting and setting underlying DOM properties (e.g., `checked`, `disabled`, `selectedIndex`) that don't directly map to standard HTML attributes.
+
+### 🛡️ Fixed (CSS & HTTP)
+
+* **CSS Module (`css/styles.ts`):** Enhanced the `css()` method to support passing an object (`Record<string, string | number>`) for setting multiple CSS properties simultaneously (e.g., `css({'background-color': 'blue', 'font-size': '14px'})`). 
+* **CSS Module (`css/styles.ts`):** Improved handling of kebab-case property names inside the `css()` method by utilizing `style.setProperty()` for greater robustness.
+* **HTTP Module (`http/get.ts`):** Fixed a critical bug in `getText()` where it incorrectly attempted to parse the response with `JSON.parse()` instead of returning the raw text. It now safely returns the raw string/HTML as intended.

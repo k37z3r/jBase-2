@@ -83,10 +83,9 @@ $('#click-me').click(() => {
 });
 
 // Hover effect
-$('.box').hover(
-    () => console.log('Mouse In'),  // Enter
-    () => console.log('Mouse Out')  // Leave
-);
+$('.box')
+    .mouseenter(() => console.log('Mouse In'))
+    .mouseleave(() => console.log('Mouse Out'));
 
 ```
 

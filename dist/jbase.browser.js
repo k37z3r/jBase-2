@@ -1,6 +1,6 @@
 /**
  * @k37z3r/jbase - A modern micro-framework for the web: jBase offers the familiar syntax of classic DOM libraries, but without their baggage. Fully typed, modular, and optimized for modern browser engines.
- * @version 2.1.1
+ * @version 2.1.2
  * @homepage https://github.com/k37z3r/jBase-2
  * @author Sven Minio (https://github.com/k37z3r/jBase-2)
  * @license GPL-3.0-or-later
@@ -742,7 +742,7 @@
   }
   function normalizeToFragment(content, doc) {
     const fragment = doc.createDocumentFragment();
-    const add = (item) => {
+    const add2 = (item) => {
       if (typeof item === "string") {
         const temp = doc.createElement("div");
         temp.innerHTML = item.trim();
@@ -752,10 +752,10 @@
       } else if (item instanceof Node) {
         fragment.appendChild(item);
       } else if (item instanceof jBase || Array.isArray(item) || item instanceof NodeList) {
-        Array.from(item).forEach((child) => add(child));
+        Array.from(item).forEach((child) => add2(child));
       }
     };
-    add(content);
+    add2(content);
     return fragment;
   }
   function remove() {
@@ -1847,6 +1847,31 @@
   });
 
   // src/modules/data/arrays.ts
+  var arrays_exports = {};
+  __export(arrays_exports, {
+    add: () => add,
+    chunk: () => chunk,
+    find: () => find,
+    mergeArray: () => mergeArray,
+    remove: () => remove2
+  });
+  function chunk(array, size) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+  }
+  function mergeArray(...arrays) {
+    return [].concat(...arrays);
+  }
+  function add(array, item, index = array.length) {
+    const copy = [...array];
+    const idx = index < 0 ? array.length + index + 1 : index;
+    copy.splice(idx, 0, item);
+    return copy;
+  }
+  var remove2, find;
   var init_arrays = __esm({
     "src/modules/data/arrays.ts"() {
       "use strict";
@@ -1863,10 +1888,297 @@
        * @requires ./types
        * * Depends on types.
        */
+      remove2 = {
+        /**
+         * * Removes an element at a specific index.
+         * @param array
+         * * The array.
+         * @param index
+         * * The index (negative values allowed).
+         */
+        at(array, index) {
+          const copy = [...array];
+          const idx = index < 0 ? array.length + index : index;
+          if (idx >= 0 && idx < copy.length) {
+            copy.splice(idx, 1);
+          }
+          return copy;
+        },
+        /**
+         * * Removes the first element.
+         * @param array
+         * * The array.
+         */
+        first(array) {
+          return array.slice(1);
+        },
+        /**
+         * * Removes the last element.
+         * @param array
+         * * The array.
+         */
+        last(array) {
+          return array.slice(0, -1);
+        },
+        /**
+         * * Removes all elements matching a query condition.
+         * @example
+         * remove.byMatch(users, 'Admin', 'exact', 'role')
+         * @param array
+         * * The array.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @param key
+         * * (Optional) The object key if it is an array of objects.
+         */
+        byMatch(array, query, mode = "exact", key) {
+          const queryStr = String(query).toLowerCase();
+          return array.filter((item) => {
+            const val2 = key ? item[key] : item;
+            const valStr = String(val2).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        }
+      };
+      find = {
+        /**
+         * * Finds the index of the first match.
+         * @param array
+         * * The array.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @param key
+         * * (Optional) The object key if it is an array of objects.
+         * @returns
+         * * Index or -1.
+         */
+        at(array, query, mode = "exact", key) {
+          const queryStr = String(query).toLowerCase();
+          return array.findIndex((item) => {
+            const val2 = key ? item[key] : item;
+            const valStr = String(val2).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        },
+        /**
+         * * Returns all elements matching the condition (Filter).
+         * @param array
+         * * The array.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @param key
+         * * (Optional) The object key if it is an array of objects.
+         * @returns
+         * * All matching elements or -1.
+         */
+        all(array, query, mode = "exact", key) {
+          const queryStr = String(query).toLowerCase();
+          return array.filter((item) => {
+            const val2 = key ? item[key] : item;
+            const valStr = String(val2).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        },
+        /**
+         * * Returns the first matching element (or undefined).
+         * @param array
+         * * The array.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @param key
+         * * (Optional) The object key if it is an array of objects.
+         * @returns
+         * * Index or -1.
+         */
+        first(array, query, mode = "exact", key) {
+          const queryStr = String(query).toLowerCase();
+          return array.find((item) => {
+            const val2 = key ? item[key] : item;
+            const valStr = String(val2).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        },
+        /**
+         * * Returns the last matching element (or undefined).
+         * @param array
+         * * The array.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @param key
+         * * (Optional) The object key if it is an array of objects.
+         * @returns
+         * * Index or -1.
+         */
+        last(array, query, mode = "exact", key) {
+          const queryStr = String(query).toLowerCase();
+          return [...array].reverse().find((item) => {
+            const val2 = key ? item[key] : item;
+            const valStr = String(val2).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        },
+        /**
+         * * Removes all elements matching a query condition.
+         * @example
+         * find.byMatch(users, 'Admin', 'exact', 'role')
+         * @param array
+         * * The array.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @param key
+         * * (Optional) The object key if it is an array of objects.
+         * @returns
+         * * Index or -1.
+         */
+        byMatch(array, query, mode = "exact", key) {
+          const queryStr = String(query).toLowerCase();
+          return array.findIndex((item) => {
+            const val2 = key ? item[key] : item;
+            const valStr = String(val2).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        }
+      };
     }
   });
 
   // src/modules/data/objects.ts
+  var objects_exports = {};
+  __export(objects_exports, {
+    find: () => find2,
+    get: () => get2,
+    mergeObjects: () => mergeObjects,
+    omit: () => omit,
+    pick: () => pick,
+    set: () => set
+  });
+  function mergeObjects(target, ...sources) {
+    if (!sources.length)
+      return target;
+    const source = sources.shift();
+    if (isObject(target) && isObject(source)) {
+      for (const key in source) {
+        if (key === "__proto__" || key === "constructor")
+          continue;
+        if (isObject(source[key])) {
+          if (!target[key]) target[key] = {};
+          mergeObjects(target[key], source[key]);
+        } else {
+          target[key] = source[key];
+        }
+      }
+    }
+    return mergeObjects(target, ...sources);
+  }
+  function pick(obj, keys) {
+    const ret = {};
+    keys.forEach((key) => {
+      if (key in obj) ret[key] = obj[key];
+    });
+    return ret;
+  }
+  function omit(obj, keys) {
+    const ret = { ...obj };
+    keys.forEach((key) => {
+      delete ret[key];
+    });
+    return ret;
+  }
+  function get2(obj, path) {
+    return path.split(".").reduce((acc, part) => acc && acc[part], obj);
+  }
+  function set(obj, path, value) {
+    const parts = path.split(".");
+    let current = obj;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i];
+      if (!current[part]) current[part] = {};
+      current = current[part];
+    }
+    current[parts[parts.length - 1]] = value;
+  }
+  function isObject(item) {
+    return item && typeof item === "object" && !Array.isArray(item);
+  }
+  var find2;
   var init_objects = __esm({
     "src/modules/data/objects.ts"() {
       "use strict";
@@ -1883,10 +2195,155 @@
        * @requires ./types
        * * Depends on types.
        */
+      find2 = {
+        /**
+         * * Returns the n-th entry of an object as a [key, value] pair. Supports negative indices.
+         * @example find.at({ a: 1, b: 2 }, 1) => ['b', 2]
+         * @param obj
+         * * The object to search.
+         * @param index
+         * * The index (0-based, negative counts from the back).
+         * @returns
+         * * A [key, value] tuple or undefined.
+         */
+        at(obj, index) {
+          const entries = Object.entries(obj);
+          const idx = index < 0 ? entries.length + index : index;
+          return entries[idx];
+        },
+        /**
+         * * Finds the first entry where the key or value matches the query.
+         * @example find.first(config, 'admin', 'exact', 'key')
+         * @param obj
+         * * The object to search.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @param searchBy
+         * * Whether to search by 'key' or 'value'.
+         * @returns
+         * * The first matching [key, value] pair or undefined.
+         */
+        first(obj, query, mode = "exact", searchBy = "key") {
+          const entries = Object.entries(obj);
+          const queryStr = String(query).toLowerCase();
+          return entries.find(([key, val2]) => {
+            const target = searchBy === "key" ? key : val2;
+            const valStr = String(target).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        },
+        /**
+         * * Finds the last entry where the key or value matches the query.
+         * @example find.last(config, '.php', 'endsWith', 'key')
+         * @param obj
+         * * The object to search.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @param searchBy
+         * * Whether to search by 'key' or 'value'.
+         * @returns
+         * * The last matching [key, value] pair or undefined.
+         */
+        last(obj, query, mode = "exact", searchBy = "key") {
+          const entries = Object.entries(obj);
+          const queryStr = String(query).toLowerCase();
+          return [...entries].reverse().find(([key, val2]) => {
+            const target = searchBy === "key" ? key : val2;
+            const valStr = String(target).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        },
+        /**
+         * * Finds all keys matching the query.
+         * @example find.key(config, 'api_', 'startsWith')
+         * @param obj
+         * * The object to search.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @returns
+         * * An array of matching keys.
+         */
+        key(obj, query, mode = "exact") {
+          const queryStr = String(query).toLowerCase();
+          return Object.keys(obj).filter((key) => {
+            const valStr = String(key).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        },
+        /**
+         * * Finds all values matching the query.
+         * @param obj
+         * * The object to search.
+         * @param query
+         * * The search query.
+         * @param mode
+         * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+         * @returns
+         * * An array of matching values.
+         */
+        value(obj, query, mode = "exact") {
+          const queryStr = String(query).toLowerCase();
+          return Object.values(obj).filter((val2) => {
+            const valStr = String(val2).toLowerCase();
+            switch (mode) {
+              case "exact":
+                return valStr === queryStr;
+              case "startsWith":
+                return valStr.startsWith(queryStr);
+              case "endsWith":
+                return valStr.endsWith(queryStr);
+              case "contains":
+                return valStr.includes(queryStr);
+              default:
+                return false;
+            }
+          });
+        }
+      };
     }
   });
 
   // src/modules/data/index.ts
+  var data;
   var init_data = __esm({
     "src/modules/data/index.ts"() {
       "use strict";
@@ -1907,11 +2364,15 @@
        * @requires ./objects
        * * Object manipulation methods.
        */
+      data = {
+        arr: arrays_exports,
+        obj: objects_exports
+      };
     }
   });
 
   // src/index.ts
-  var init, $, jB, _jB, __jB, _jBase, __jBase, jBase2, __;
+  var initFn, init, $, jB, _jB, __jB, _jBase, __jBase, jBase2, __;
   var init_index = __esm({
     "src/index.ts"() {
       "use strict";
@@ -1928,7 +2389,7 @@
       init_data();
       /**
        * @file src/index.ts
-       * @version 2.1.1
+       * @version 2.1.2
        * @since 2.0.0
        * @license GPL-3.0-or-later
        * @copyright Sven Minio 2026
@@ -1959,9 +2420,14 @@
       Object.assign(jBase.prototype, eventMethods);
       Object.assign(jBase.prototype, domMethods);
       Object.assign(jBase.prototype, effectMethods);
-      init = (selector) => {
+      initFn = (selector) => {
         return new jBase(selector);
       };
+      init = Object.assign(initFn, {
+        http,
+        data,
+        fn: jBase.prototype
+      });
       $ = init;
       jB = init;
       _jB = init;
@@ -1979,7 +2445,7 @@
       init_index();
       /**
        * @file src/browser.ts
-       * @version 2.0.2
+       * @version 2.0.3
        * @since 2.0.0
        * @license GPL-3.0-or-later
        * @copyright Sven Minio 2026
@@ -1996,7 +2462,6 @@
       window._jBase = _jBase;
       window.__jBase = __jBase;
       window.__ = __;
-      window.http = http;
       console.log("jBase initialized and ready!");
     }
   });

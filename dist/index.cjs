@@ -1,6 +1,6 @@
 /**
  * @k37z3r/jbase - A modern micro-framework for the web: jBase offers the familiar syntax of classic DOM libraries, but without their baggage. Fully typed, modular, and optimized for modern browser engines.
- * @version 2.1.1
+ * @version 2.1.2
  * @homepage https://github.com/k37z3r/jBase-2
  * @author Sven Minio (https://github.com/k37z3r/jBase-2)
  * @license GPL-3.0-or-later
@@ -1859,9 +1859,14 @@ Object.assign(jBase.prototype, cssMethods);
 Object.assign(jBase.prototype, eventMethods);
 Object.assign(jBase.prototype, domMethods);
 Object.assign(jBase.prototype, effectMethods);
-var init = (selector) => {
+var initFn = (selector) => {
   return new jBase(selector);
 };
+var init = Object.assign(initFn, {
+  http,
+  data,
+  fn: jBase.prototype
+});
 var bind = (window2) => {
   const doc = window2.document;
   const boundInit = (selector) => new jBase(selector, doc);
@@ -2287,7 +2292,7 @@ var __ = init;
  */
 /**
  * @file src/index.ts
- * @version 2.1.1
+ * @version 2.1.2
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026

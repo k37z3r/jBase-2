@@ -1,6 +1,6 @@
 /**
  * @file src/index.ts
- * @version 2.1.1
+ * @version 2.1.2
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -863,14 +863,102 @@ export declare const bind: (window: Window) => (selector: JBaseInput) => JBaseCl
 /**
  * * Export the factory under different aliases for maximum compatibility and convenience.
  */
-export declare const $: (selector: JBaseInput) => JBaseClass;
-export declare const jB: (selector: JBaseInput) => JBaseClass;
-export declare const _jB: (selector: JBaseInput) => JBaseClass;
-export declare const __jB: (selector: JBaseInput) => JBaseClass;
-export declare const _jBase: (selector: JBaseInput) => JBaseClass;
-export declare const __jBase: (selector: JBaseInput) => JBaseClass;
-export declare const jBase: (selector: JBaseInput) => JBaseClass;
-export declare const __: (selector: JBaseInput) => JBaseClass;
+export declare const $: ((selector: JBaseInput) => JBaseClass) & {
+    http: {
+        post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
+        get<T>(url: string, option?: RequestInit): Promise<T>;
+        getText<T = string>(url: string, option?: RequestInit): Promise<T>;
+    };
+    data: {
+        arr: typeof import("./modules/data/arrays");
+        obj: typeof import("./modules/data/objects");
+    };
+    fn: JBaseClass;
+};
+export declare const jB: ((selector: JBaseInput) => JBaseClass) & {
+    http: {
+        post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
+        get<T>(url: string, option?: RequestInit): Promise<T>;
+        getText<T = string>(url: string, option?: RequestInit): Promise<T>;
+    };
+    data: {
+        arr: typeof import("./modules/data/arrays");
+        obj: typeof import("./modules/data/objects");
+    };
+    fn: JBaseClass;
+};
+export declare const _jB: ((selector: JBaseInput) => JBaseClass) & {
+    http: {
+        post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
+        get<T>(url: string, option?: RequestInit): Promise<T>;
+        getText<T = string>(url: string, option?: RequestInit): Promise<T>;
+    };
+    data: {
+        arr: typeof import("./modules/data/arrays");
+        obj: typeof import("./modules/data/objects");
+    };
+    fn: JBaseClass;
+};
+export declare const __jB: ((selector: JBaseInput) => JBaseClass) & {
+    http: {
+        post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
+        get<T>(url: string, option?: RequestInit): Promise<T>;
+        getText<T = string>(url: string, option?: RequestInit): Promise<T>;
+    };
+    data: {
+        arr: typeof import("./modules/data/arrays");
+        obj: typeof import("./modules/data/objects");
+    };
+    fn: JBaseClass;
+};
+export declare const _jBase: ((selector: JBaseInput) => JBaseClass) & {
+    http: {
+        post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
+        get<T>(url: string, option?: RequestInit): Promise<T>;
+        getText<T = string>(url: string, option?: RequestInit): Promise<T>;
+    };
+    data: {
+        arr: typeof import("./modules/data/arrays");
+        obj: typeof import("./modules/data/objects");
+    };
+    fn: JBaseClass;
+};
+export declare const __jBase: ((selector: JBaseInput) => JBaseClass) & {
+    http: {
+        post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
+        get<T>(url: string, option?: RequestInit): Promise<T>;
+        getText<T = string>(url: string, option?: RequestInit): Promise<T>;
+    };
+    data: {
+        arr: typeof import("./modules/data/arrays");
+        obj: typeof import("./modules/data/objects");
+    };
+    fn: JBaseClass;
+};
+export declare const jBase: ((selector: JBaseInput) => JBaseClass) & {
+    http: {
+        post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
+        get<T>(url: string, option?: RequestInit): Promise<T>;
+        getText<T = string>(url: string, option?: RequestInit): Promise<T>;
+    };
+    data: {
+        arr: typeof import("./modules/data/arrays");
+        obj: typeof import("./modules/data/objects");
+    };
+    fn: JBaseClass;
+};
+export declare const __: ((selector: JBaseInput) => JBaseClass) & {
+    http: {
+        post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
+        get<T>(url: string, option?: RequestInit): Promise<T>;
+        getText<T = string>(url: string, option?: RequestInit): Promise<T>;
+    };
+    data: {
+        arr: typeof import("./modules/data/arrays");
+        obj: typeof import("./modules/data/objects");
+    };
+    fn: JBaseClass;
+};
 /**
  * * Utility for throttled function calls.
  */

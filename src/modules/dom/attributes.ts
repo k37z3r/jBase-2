@@ -1,6 +1,6 @@
 /**
  * @file src/modules/dom/attributes.ts
- * @version 2.0.2
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -54,6 +54,44 @@ export function val(this: jBase, value?: string): string | jBase {
     this.forEach(el => {
         if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
             el.value = value;
+        }
+    });
+    return this;
+}
+
+/**
+ * * Removes an attribute from all elements in the selection.
+ * @param name
+ * * The name of the attribute to remove (e.g., 'disabled', 'readonly').
+ * @returns
+ * * The jBase instance for chaining.
+ */
+export function removeAttr(this: jBase, name: string): jBase {
+    this.forEach(el => {
+        if (el instanceof Element) el.removeAttribute(name);
+    });
+    return this;
+}
+
+/**
+ * * Gets a property from the first element or sets it for all elements in the selection.
+ * * Useful for DOM properties that don't directly map to HTML attributes (like 'checked' or 'selectedIndex').
+ * @param name
+ * * The name of the property (e.g., 'checked', 'disabled').
+ * @param value
+ * * (Optional) The value to set. If undefined, acts as a getter.
+ * @returns
+ * * The property value when reading, or the jBase instance when writing.
+ */
+export function prop(this: jBase, name: string, value?: any): any | jBase {
+    if (value === undefined) {
+        const el = this[0];
+        return (el instanceof Element) ? (el as any)[name] : undefined;
+    }
+
+    this.forEach(el => {
+        if (el instanceof Element) {
+            (el as any)[name] = value;
         }
     });
     return this;

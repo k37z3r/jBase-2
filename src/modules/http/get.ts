@@ -1,6 +1,6 @@
 /**
  * @file src/modules/http/get.ts
- * @version 2.0.3
+ * @version 2.0.4
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -54,20 +54,24 @@ export async function get<T>(url: string, option?: RequestInit): Promise<T> {
  * @throws
  * * Error if HTTP status is not in success range (200-299).
  */
-export async function getText<T>(url: string, option?: RequestInit): Promise<T> {
+export async function getText<T = string>(url: string, option?: RequestInit): Promise<T> {
     const fetchOptions: RequestInit = { ...option };
+    
     if (fetchOptions.method?.toLowerCase() !== 'get') {
         fetchOptions.method = 'GET';
     }
     if (!fetchOptions.signal) {
         fetchOptions.signal = AbortSignal.timeout(5000);
     }
+    
     const response = await fetch(url, {
         ...fetchOptions
     });
+    
     if (!response.ok) {
         throw new Error(`HTTP Error: ${response.status}`);
     }
+    
     const text = await response.text();
-    return text ? JSON.parse(text) : {} as T;
+    return text as unknown as T; 
 }

@@ -1,6 +1,6 @@
 /**
  * @file src/index.ts
- * @version 2.0.2
+ * @version 2.1.1
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -107,6 +107,15 @@ declare module './core' {
          * * The computed value as a string.
          */
         css(property: JBaseCSSProperty): string;
+
+        /**
+         * * Sets multiple CSS properties for all selected elements using an object.
+         * @param properties
+         * * An object containing CSS property-value pairs.
+         * @returns
+         * * The current jBase instance for method chaining.
+         */
+        css(properties: Record<string, string | number>): jBase;
 
         /* ==========================================================================
            EVENT MODULE
@@ -442,6 +451,35 @@ declare module './core' {
          * * The current jBase instance.
          */
         val(value: string | number): jBase;
+
+        /**
+         * * Gets a property from the first element.
+         * * Useful for DOM properties that don't directly map to HTML attributes.
+         * @param name
+         * * The name of the property (e.g., 'checked', 'disabled').
+         * @returns
+         * * The property value.
+         */
+        prop(name: string): any;
+        /**
+         * * Sets a property for all selected elements.
+         * @param name
+         * * The name of the property.
+         * @param value
+         * * The value to set.
+         * @returns
+         * * The current jBase instance.
+         */
+        prop(name: string, value: any): jBase;
+
+        /**
+         * * Removes an attribute from all selected elements.
+         * @param name
+         * * The name of the attribute to remove.
+         * @returns
+         * * The current jBase instance.
+         */
+        removeAttr(name: string): jBase;
 
         /* --- Manipulation --- */
 

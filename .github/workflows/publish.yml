@@ -18,11 +18,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24' # 🚀 Update auf Node 24 (behebt die Warnung)
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install # 🛠️ Geändert von 'npm ci' zu 'npm install' (behebt den Absturz)
 
       - name: Build
         run: node build.js

@@ -8,19 +8,17 @@
 Display the matched elements by fading them to opaque (opacity: 1).
 
 **Parameters**
-
-* `duration` (Number, optional): A number determining how long the animation will run (in milliseconds). Default is usually 400.
-* `callback` (Function, optional): A function to call once the animation is complete.
+* `options` (Object, optional): Animation options.
+  * `duration` (Number): Animation runtime in milliseconds (default is 300).
+  * `displayType` (String): The CSS display value to set before fading (default is 'block').
 
 **Returns**
-
 * (jBase): Current instance.
 
 **Example**
-
 ```javascript
-// Fade in all hidden paragraphs over 600ms
-$('p.hidden').fadeIn(600, function() {
+// Fade in over 600ms as flexbox
+$('div.hidden').fadeIn({ duration: 600, displayType: 'flex' }, function() {
     console.log('Animation complete.');
 });
 
@@ -35,8 +33,8 @@ Hide the matched elements by fading them to transparent (opacity: 0). Once compl
 
 **Parameters**
 
-* `duration` (Number, optional): Duration in milliseconds.
-* `callback` (Function, optional): A function to call once the animation is complete.
+* `options` (Object, optional): Animation options.
+  * `duration` (Number, optional): Duration in milliseconds.
 
 **Returns**
 
@@ -45,7 +43,7 @@ Hide the matched elements by fading them to transparent (opacity: 0). Once compl
 **Example**
 
 ```javascript
-$('.alert-box').fadeOut(300);
+$('.alert-box').fadeOut({ duration: 300 });
 
 ```
 
@@ -58,8 +56,8 @@ Display or hide the matched elements by animating their opacity.
 
 **Parameters**
 
-* `duration` (Number, optional): Duration in milliseconds.
-* `callback` (Function, optional): A function to call once the animation is complete.
+* `options` (Object, optional): Animation options.
+  * `duration` (Number, optional): Duration in milliseconds.
 
 **Returns**
 
@@ -70,7 +68,7 @@ Display or hide the matched elements by animating their opacity.
 ```javascript
 // Toggle visibility on click
 $('#toggle-btn').click(() => {
-    $('.content').fadeToggle();
+    $('.content').fadeToggle({ duration: 200 });
 });
 
 ```

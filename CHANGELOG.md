@@ -69,3 +69,23 @@ All notable changes to this project will be documented in this file.
 
 * **Core (`src/index.ts`):** Fixed an architectural bug where the `http` and `data` modules were not accessible via the main `$` wrapper (e.g., `$.http` or `$.data`) as documented in the wiki. They are now properly attached to the `init` factory function using `Object.assign()`.
 * **Browser Module (`src/browser.ts`):** Removed the unintended global `window.http` export to prevent global namespace pollution. The HTTP module must now be accessed exclusively through the framework instance (e.g., `$.http` or `jBase.http`).
+
+## [2.2.0] - 2026-04-12
+
+### 🚀 Added (New Features)
+* **Event System (`events/binding.ts`):** * Massive upgrade to the `.on()` and `.off()` methods. They now fully support **Event Delegation** (e.g., `$('table').on('click', 'tr', handler)`) and passing custom data to the event object (`event.data`).
+  * Added `.once()` method to execute a handler at most once per element and event type. Supports delegation and data.
+  * Added `.trigger()` method to programmatically execute native or custom events and pass optional data via `event.detail`.
+* **Touch Events (`events/touch.ts`):** Added `.swipeLeft()`, `.swipeUp()` `.swipeDown()` and `.swipeRight()` helpers for robust mobile gesture detection.
+* **Mouse Events (`events/mouse.ts`):** Added `.hover()` as a convenient shorthand for binding both `mouseenter` and `mouseleave` handlers.
+* **Core Utilities (`utils.ts` & `index.ts`):** * Introduced `$.each()`, a highly performant, breakable iteration utility for arrays, NodeLists, and plain objects.
+  * `$.throttle` and `$.debounce` are now globally exposed on the main `$` object for easy access.
+
+### ⚡ Performance
+* **Core (`core.ts`):** Implemented a high-performance, native `for`-loop iteration method (`.each()`) inside the core class. Replaced standard `forEach` calls across the entire framework (DOM, CSS, Attributes, etc.) to significantly reduce CPU overhead and allow early loop termination.
+
+### 🛡️ Fixed (Stability & Architecture)
+* **SSR Safety (`core.ts`):** Fixed a critical bug in the constructor where string selectors would fall back to the global `document` instead of the passed isolated `context` (`this.doc`). Node.js environments are now completely safe.
+* **Event Delegation (`events/binding.ts`):** Fixed a potential `TypeError` crash during event delegation when a user clicks on a pure `TextNode` (which lacks the `.closest()` method).
+* **Typings (`index.ts`):** Fixed signature mismatch for `.prop()` to correctly handle getter (`any`) and setter (`jBase`) overloads.
+* **Dependencies (`package.json`):** Moved `jsdom` and `tslib` from standard `dependencies` to `peerDependencies` / `devDependencies`. This drastically reduces the installation size for browser-only users via npm.

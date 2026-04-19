@@ -12,7 +12,10 @@
  * * High-performance JavaScript bundler.
  * @requires ./package.json
  * * Project configuration and versioning.
+ * @requires child_process
+ * * For executing shell commands to generate TypeScript definitions.
  */
+
 const esbuild = require('esbuild');
 const pkg = require('./package.json');
 const { exec } = require('child_process');

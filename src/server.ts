@@ -1,6 +1,6 @@
 /**
  * @file src/index.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -14,10 +14,8 @@ import { bind } from './index';
 
 /**
  * * Parses an HTML string on the server, allowing DOM manipulation.
- * @param html
- * * The raw HTML string.
- * @returns
- * * An object containing the window, document, and the jBase instance setup.
+ * @param html The raw HTML string.
+ * @returns An object containing the window, document, and the jBase instance setup.
  */
 export function parseHTML(html: string) {
     const dom = new JSDOM(html);

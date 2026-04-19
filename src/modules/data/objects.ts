@@ -1,6 +1,6 @@
 /**
  * @file src/modules/data/objects.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -10,20 +10,19 @@
  * * Utility functions for object manipulation (e.g., deep merging, extension).
  * @requires ./types
  * * Depends on types.
+ * @requires src/utils
+ * * Depends on utility functions (e.g., each).
  */
 
+import { each } from 'src/utils';
 import { MatchMode } from './types';
 
 /**
  * * Recursively merges multiple objects (Deep Merge).
- * @example
- * mergeObjects({ a: 1, b: { x: 1 } }, { b: { y: 2 } }) => { a: 1, b: { x: 1, y: 2 } }
- * @param target
- * * The target object (will be modified!).
- * @param sources
- * * One or more source objects.
- * @returns
- * * The modified target object.
+ * @example mergeObjects({ a: 1, b: { x: 1 } }, { b: { y: 2 } }) => { a: 1, b: { x: 1, y: 2 } }
+ * @param target The target object (will be modified!).
+ * @param sources One or more source objects.
+ * @returns The modified target object.
  */
 export function mergeObjects(target: any, ...sources: any[]): any {
     if (!sources.length)
@@ -47,16 +46,14 @@ export function mergeObjects(target: any, ...sources: any[]): any {
 
 /**
  * * Creates a new object containing only the specified keys (Allowlist).
- * @param obj
- * * The source object.
- * @param keys
- * * Array of keys to keep.
- * @returns
- * * A new object with selected keys.
+ * @example pick({ a: 1, b: 2, c: 3 }, ['a', 'c']) => { a: 1, c: 3 }
+ * @param obj The source object.
+ * @param keys Array of keys to keep.
+ * @returns A new object with selected keys.
  */
 export function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
     const ret: any = {};
-    keys.forEach(key => {
+    each(keys, function(_index, key) {
         if (key in obj) ret[key] = obj[key];
     });
     return ret as Pick<T, K>;
@@ -64,16 +61,14 @@ export function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Pi
 
 /**
  * * Creates a new object containing all keys EXCEPT the specified ones (Blocklist).
- * @param obj
- * * The source object.
- * @param keys
- * * Array of keys to remove.
- * @returns
- * * A new object without the specified keys.
+ * @example omit({ a: 1, b: 2, c: 3 }, ['b']) => { a: 1, c: 3 }
+ * @param obj The source object.
+ * @param keys Array of keys to remove.
+ * @returns A new object without the specified keys.
  */
 export function omit<T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
     const ret = { ...obj };
-    keys.forEach(key => {
+    each(keys, function(_index, key) {
         delete ret[key];
     });
     return ret as Omit<T, K>;
@@ -81,14 +76,10 @@ export function omit<T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
 
 /**
  * * Safely retrieves a value from a nested object (Safe Navigation).
- * @example
- * get(user, 'address.city') Returns city or undefined
- * @param obj
- * * The object.
- * @param path
- * * The path as a dot-notation string.
- * @returns
- * * The found value or undefined.
+ * @example get(config, 'settings.theme.color') => Returns the value of config.settings.theme.color or undefined if any part is missing.
+ * @param obj The object.
+ * @param path The path as a dot-notation string.
+ * @returns The found value or undefined.
  */
 export function get(obj: any, path: string): any {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
@@ -96,12 +87,10 @@ export function get(obj: any, path: string): any {
 
 /**
  * * Sets a value deeply within a nested object. Creates missing intermediate objects automatically.
- * @param obj
- * * The object to modify.
- * @param path
- * * The path as a string (e.g., 'settings.theme.color').
- * @param value
- * * The value to set.
+ * @example set(config, 'settings.theme.color', 'dark') => Sets config.settings.theme.color to 'dark', creating objects if needed.
+ * @param obj The object to modify.
+ * @param path The path as a string (e.g., 'settings.theme.color').
+ * @param value The value to set.
  */
 export function set(obj: any, path: string, value: any): void {
     const parts = path.split('.');
@@ -121,12 +110,9 @@ export const find = {
     /**
      * * Returns the n-th entry of an object as a [key, value] pair. Supports negative indices.
      * @example find.at({ a: 1, b: 2 }, 1) => ['b', 2]
-     * @param obj
-     * * The object to search.
-     * @param index
-     * * The index (0-based, negative counts from the back).
-     * @returns
-     * * A [key, value] tuple or undefined.
+     * @param obj The object to search.
+     * @param index The index (0-based, negative counts from the back).
+     * @returns A [key, value] tuple or undefined.
      */
     at(obj: any, index: number): [string, any] | undefined {
         const entries = Object.entries(obj);
@@ -137,16 +123,11 @@ export const find = {
     /**
      * * Finds the first entry where the key or value matches the query.
      * @example find.first(config, 'admin', 'exact', 'key')
-     * @param obj
-     * * The object to search.
-     * @param query
-     * * The search query.
-     * @param mode
-     * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-     * @param searchBy
-     * * Whether to search by 'key' or 'value'.
-     * @returns
-     * * The first matching [key, value] pair or undefined.
+     * @param obj The object to search.
+     * @param query The search query.
+     * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+     * @param searchBy Whether to search by 'key' or 'value'.
+     * @returns The first matching [key, value] pair or undefined.
      */
     first(obj: any, query: string | number, mode: MatchMode = 'exact', searchBy: 'key' | 'value' = 'key'): [string, any] | undefined {
         const entries = Object.entries(obj);
@@ -169,16 +150,11 @@ export const find = {
     /**
      * * Finds the last entry where the key or value matches the query.
      * @example find.last(config, '.php', 'endsWith', 'key')
-     * @param obj
-     * * The object to search.
-     * @param query
-     * * The search query.
-     * @param mode
-     * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-     * @param searchBy
-     * * Whether to search by 'key' or 'value'.
-     * @returns
-     * * The last matching [key, value] pair or undefined.
+     * @param obj The object to search.
+     * @param query The search query.
+     * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+     * @param searchBy Whether to search by 'key' or 'value'.
+     * @returns The last matching [key, value] pair or undefined.
      */
     last(obj: any, query: string | number, mode: MatchMode = 'exact', searchBy: 'key' | 'value' = 'key'): [string, any] | undefined {
         const entries = Object.entries(obj);
@@ -201,14 +177,10 @@ export const find = {
     /**
      * * Finds all keys matching the query.
      * @example find.key(config, 'api_', 'startsWith')
-     * @param obj
-     * * The object to search.
-     * @param query
-     * * The search query.
-     * @param mode
-     * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-     * @returns
-     * * An array of matching keys.
+     * @param obj The object to search.
+     * @param query The search query.
+     * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+     * @returns An array of matching keys.
      */
     key(obj: any, query: string, mode: MatchMode = 'exact'): string[] {
         const queryStr = String(query).toLowerCase();
@@ -227,14 +199,11 @@ export const find = {
 
     /**
      * * Finds all values matching the query.
-     * @param obj
-     * * The object to search.
-     * @param query
-     * * The search query.
-     * @param mode
-     * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-     * @returns
-     * * An array of matching values.
+     * @example find.value(config, 'enabled', 'exact')
+     * @param obj The object to search.
+     * @param query The search query.
+     * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+     * @returns An array of matching values.
      */
     value(obj: any, query: string, mode: MatchMode = 'exact'): any[] {
         const queryStr = String(query).toLowerCase();
@@ -255,10 +224,9 @@ export const find = {
 /**
  * * Checks if the provided value is a plain object (not null, not an array).
  * * Acts as a TypeScript Type Guard.
- * @param item
- * * The value to check.
- * @returns
- * * True if the value is a plain object.
+ * @private
+ * @param item The value to check.
+ * @returns True if the value is a plain object.
  */
 function isObject(item: any): item is Record<string, any> {
     return (item && typeof item === 'object' && !Array.isArray(item));

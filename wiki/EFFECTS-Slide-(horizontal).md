@@ -8,19 +8,18 @@
 Displays the matched elements with a sliding motion (usually from left to right or by expanding width).
 
 **Parameters**
+* `options` (Object, optional): Animation options.
+  * `duration` (Number): Duration in milliseconds (default is 300).
+  * `direction` (String): 'left' or 'right' (default is 'left').
 
-* `duration` (Number, optional): Duration in milliseconds.
-* `callback` (Function, optional): A function to call once the animation is complete.
 
 **Returns**
-
 * (jBase): Current instance.
 
 **Example**
 
 ```javascript
-$('#sidebar').slideIn(400);
-
+$('#sidebar').slideIn({ duration: 400, direction: 'left' });
 ```
 
 ---
@@ -31,18 +30,17 @@ $('#sidebar').slideIn(400);
 Hides the matched elements with a sliding motion (usually collapsing width or moving off-canvas).
 
 **Parameters**
-
-* `duration` (Number, optional): Duration in milliseconds.
-* `callback` (Function, optional): A function to call once the animation is complete.
+  * `options` (Object, optional): Animation options.
+      * `duration` (Number): Duration in milliseconds (default is 300).
+      * `direction` (String): 'left' or 'right' (default is 'left').
 
 **Returns**
-
 * (jBase): Current instance.
 
 **Example**
 
 ```javascript
-$('#sidebar').slideOut(400);
+$('#sidebar').slideOut({ duration: 400 });
 
 ```
 
@@ -54,17 +52,15 @@ $('#sidebar').slideOut(400);
 Display or hide the matched elements with a horizontal sliding motion.
 
 **Parameters**
-
-* `duration` (Number, optional): Duration in milliseconds.
-* `callback` (Function, optional): A function to call once the animation is complete.
+  * `options` (Object, optional): Animation options.
+      * `duration` (Number): Duration in milliseconds (default is 300).
+      * `direction` (String): 'left' or 'right' (default is 'left').
 
 **Returns**
-
 * (jBase): Current instance.
 
 **Example**
 
 ```javascript
 $('.drawer').slideToggle();
-
 ```

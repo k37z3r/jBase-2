@@ -1,5 +1,5 @@
 * [`chunk`](#usage-chunk) | [`mergeArray`](#usage-mergeArray) | [`add`](#usage-add)
-* [`remove.at`](#usage-remove.at) | [`remove.first`](#usage-remove.first) | [`remove.last`](#usage-remove.last) | [`remove.byMatch`](#usage-remove.byMatch) | [`remove.all`](#usage-remove.all)
+* [`remove.at`](#usage-remove.at) | [`remove.first`](#usage-remove.first) | [`remove.last`](#usage-remove.last) | [`remove.byMatch`](#usage-remove.byMatch)
 * [`findAt`](#usage-find-at) | [`findFirst`](#usage-find-first) | [`findLast`](#usage-find-last) | [`findAll`](#usage-find-all) | [`findByMatch`](#usage-find-byMatch)
 
 ---

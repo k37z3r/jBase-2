@@ -52,19 +52,18 @@ $('#input').keyup(function() {
 
 ## <a id="usage-keypress"></a>.keypress
 
+> **⚠️ DEPRECATED:** This event is officially deprecated in modern web standards. Please use [`.keydown()`](#usage-keydown) instead.
+
 **Description**
 Bind an event handler to the "keypress" event, or trigger it.
 
 **Parameters**
-
 * `handler` (Function, optional): Function to execute.
 
 **Returns**
-
 * (jBase): Current instance.
 
 **Example**
-
 ```javascript
 $(document).keypress(function(e) {
     // Logic here

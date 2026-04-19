@@ -1,5 +1,5 @@
 * [`click`](#usage-click) | [`dblclick`](#usage-dblclick)
-* [`mouseenter`](#usage-mouseenter) | [`mouseleave`](#usage-mouseleave) | [`mousemove`](#usage-mousemove) | [`mousedown`](#usage-mousedown) | [`mouseup`](#usage-mouseup)
+* [`mouseenter`](#usage-mouseenter) | [`mouseleave`](#usage-mouseleave) | [`mousemove`](#usage-mousemove) | [`mousedown`](#usage-mousedown) | [`mouseup`](#usage-mouseup) | [`mouseover`](#usage-mouseover) | [`mouseout`](#usage-mouseout) | [`hover`](#usage-hover)
 
 ---
 
@@ -94,7 +94,6 @@ Bind an event handler to the "mouseup" event (mouse button is released), or trig
 $('.btn').mouseup(function() {
     $(this).removeClass('active-state');
 });
-
 ```
 
 ---
@@ -118,7 +117,6 @@ Bind an event handler to be fired when the mouse enters an element. This event d
 $('.card').mouseenter(function() {
     $(this).addClass('hover-effect');
 });
-
 ```
 
 ---
@@ -142,7 +140,6 @@ Bind an event handler to be fired when the mouse leaves an element. This event d
 $('.card').mouseleave(function() {
     $(this).removeClass('hover-effect');
 });
-
 ```
 
 ---
@@ -166,7 +163,6 @@ Bind an event handler to the "mousemove" event, or trigger it.
 $(document).mousemove(function(e) {
     console.log('Coords: ', e.pageX, e.pageY);
 });
-
 ```
 
 ---
@@ -190,7 +186,6 @@ Bind an event handler to the "mouseover" event. This event bubbles (triggers if 
 $('.container').mouseover(function() {
     // Handle bubbling mouseover
 });
-
 ```
 
 ---
@@ -214,5 +209,26 @@ Bind an event handler to the "mouseout" event. This event bubbles.
 $('.container').mouseout(function() {
     // Handle bubbling mouseout
 });
+```
 
+---
+
+## <a id="usage-hover"></a>.hover
+
+**Description**
+Bind two handlers to the matched elements, to be executed when the mouse pointer enters and leaves the elements. This is a convenient shorthand for chaining `.mouseenter()` and `.mouseleave()`.
+
+**Parameters**
+* `handlerIn` (Function): A function to execute when the mouse pointer enters the element.
+* `handlerOut` (Function): A function to execute when the mouse pointer leaves the element.
+
+**Returns**
+* (jBase): Current instance for chaining.
+
+**Example**
+```javascript
+$('.card').hover(
+    function(e) { $(this).addClass('shadow-lg'); }, // On Enter
+    function(e) { $(this).removeClass('shadow-lg'); } // On Leave
+);
 ```

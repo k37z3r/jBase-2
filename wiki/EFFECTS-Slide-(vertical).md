@@ -9,20 +9,17 @@
 Display the matched elements with a sliding motion (expanding height downwards).
 
 **Parameters**
-
-* `duration` (Number, optional): Duration in milliseconds.
-* `callback` (Function, optional): A function to call once the animation is complete.
+* `options` (Object, optional): Animation options.
+  * `duration` (Number): Duration in milliseconds (default is 300).
+  * `displayType` (String): The CSS display value to set before sliding (default is 'block').
 
 **Returns**
-
 * (jBase): Current instance.
 
 **Example**
-
 ```javascript
 // Reveal a dropdown menu
-$('.dropdown-menu').slideDown(200);
-
+$('.dropdown-menu').slideDown({ duration: 200 });
 ```
 
 ---
@@ -33,19 +30,15 @@ $('.dropdown-menu').slideDown(200);
 Hide the matched elements with a sliding motion (collapsing height upwards).
 
 **Parameters**
-
-* `duration` (Number, optional): Duration in milliseconds.
-* `callback` (Function, optional): A function to call once the animation is complete.
+  * `options` (Object, optional): Animation options.
+      * `duration` (Number): Duration in milliseconds (default is 300).
 
 **Returns**
-
-* (jBase): Current instance.
+  * (jBase): Current instance.
 
 **Example**
-
 ```javascript
-$('.dropdown-menu').slideUp(200);
-
+$('.dropdown-menu').slideUp({ duration: 200 });
 ```
 
 ---
@@ -56,20 +49,16 @@ $('.dropdown-menu').slideUp(200);
 Display or hide the matched elements with a vertical sliding motion. Ideal for accordions or collapsible boxes.
 
 **Parameters**
-
-* `duration` (Number, optional): Duration in milliseconds.
-* `callback` (Function, optional): A function to call once the animation is complete.
+  * `options` (Object, optional): Animation options.
+      * `duration` (Number): Duration in milliseconds (default is 300).
 
 **Returns**
-
 * (jBase): Current instance.
 
 **Example**
-
 ```javascript
 $('.accordion-header').click(function() {
     // Slide toggle the next element (the body)
-    $(this).next().slideToggleBox(300);
+    $(this).next().slideToggleBox({ duration: 300 });
 });
-
 ```

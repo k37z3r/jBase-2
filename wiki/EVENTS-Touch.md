@@ -1,4 +1,6 @@
 * [`touchstart`](#usage-touchstart) | [`touchend`](#usage-touchend) | [`touchmove`](#usage-touchmove) | [`touchcancel`](#usage-touchcancel)
+* [`swipeLeft`](#usage-swipeLeft) | [`swipeRight`](#usage-swipeRight) | [`swipeUp`](#usage-swipeUp) | [`swipeDown`](#usage-swipeDown)
+
 
 ---
 
@@ -95,4 +97,89 @@ $('.swipe-area').touchcancel(function() {
     console.log('Touch cancelled');
 });
 
+```
+
+---
+
+## <a id="usage-swipeLeft"></a>.swipeLeft
+
+**Description**
+Binds an event handler to be executed when the user swipes their finger to the left across the element. The swipe must cover a minimum distance of 50px.
+
+**Parameters**
+* `handler` (Function): Function to execute on left swipe.
+
+**Returns**
+* (jBase): Current instance.
+
+**Example**
+```javascript
+$('.carousel').swipeLeft(() => nextSlide());
+```
+
+---
+
+## <a id="usage-swipeRight"></a>.swipeRight
+**Description**
+Binds an event handler to be executed when the user swipes their finger to the right across the element.
+
+**Parameters**
+
+  * `handler` (Function): Function to execute on right swipe.
+
+**Returns**
+
+  * (jBase): Current instance.
+
+**Example**
+
+```javascript
+$('.carousel').swipeRight(() => prevSlide());
+```
+
+---
+
+## <a id="usage-swipeUp"></a>.swipeUp
+
+**Description**
+Binds an event handler to be executed when the user swipes their finger upwards across the element.
+
+**Parameters**
+
+  * `handler` (Function): Function to execute on upward swipe.
+
+**Returns**
+
+  * (jBase): Current instance.
+
+**Example**
+
+```javascript
+$('.carousel').swipeUp(() => {
+    CloseWindow()
+});
+```
+
+---
+
+## <a id="usage-swipeDown"></a>.swipeDown
+
+**Description**
+Binds an event handler to be executed when the user swipes their finger downwards across the element.
+
+**Parameters**
+
+  * `handler` (Function): Function to execute on downward swipe.
+
+**Returns**
+
+  * (jBase): Current instance.
+
+
+**Example**
+
+```javascript
+$('.carousel').swipeDown(() => {
+    Reload();
+});
 ```

@@ -19,15 +19,6 @@ import * as postMethods from './post';
 
 /**
  * * The central HTTP client of the framework. Aggregates all HTTP methods (GET, POST, etc.) into a unified interface. Acts as a wrapper around the native `fetch` API to simplify JSON parsing, error handling, and typing.
- * @example
- * Get data / Daten abrufen
- * const data = await http.get<UserData>('/api/user/1');
- *
- * Send data / Daten senden
- * await http.post('/api/login', { username: '...', password: '...' });
- *
- * Load HTML / HTML laden
- * const html = await http.getText('/templates/modal.html');
  */
 export const http = {
     ...getMethods,

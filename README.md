@@ -1,6 +1,6 @@
 # jBase
 
-![Version](https://img.shields.io/badge/version-2.1.2-blue.svg?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.2.0-blue.svg?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg?style=flat-square)
 ![Size](https://img.shields.io/badge/size-lightweight-orange.svg?style=flat-square)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen.svg?style=flat-square)

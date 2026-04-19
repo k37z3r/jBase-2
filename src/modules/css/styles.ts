@@ -1,6 +1,6 @@
 /**
  * @file src/modules/css/styles.ts
- * @version 2.0.3
+ * @version 2.0.4
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -16,16 +16,16 @@ import { jBase } from '../../core';
 
 /**
  * * Gets a CSS property value from the first element or sets one/multiple CSS properties for all elements.
- * @param property
- * * A CSS property name as a string, or an object of property-value pairs to set multiple styles.
- * @param value
- * * (Optional) The value to set if `property` is a string. If undefined and `property` is a string, acts as a getter.
- * @returns
- * * The CSS value as a string when reading, or the jBase instance when writing.
+ * @example css('color', 'red') => Sets the 'color' style to 'red' for all matched elements.
+ * @example css({ color: 'red', backgroundColor: 'blue' }) => Sets multiple styles for all matched elements.
+ * @example css('color') => Returns the computed 'color' value of the first matched element.
+ * @param property A CSS property name as a string, or an object of property-value pairs to set multiple styles.
+ * @param value (Optional) The value to set if `property` is a string. If undefined and `property` is a string, acts as a getter.
+ * @returns The CSS value as a string when reading, or the jBase instance when writing.
  */
 export function css(this: jBase, property: string | Record<string, string | number>, value?: string | number): string | jBase {
     if (typeof property === 'object' && property !== null) {
-        this.forEach(el => {
+        this.each(function(el) {
             if (el instanceof HTMLElement || el instanceof SVGElement) {
                 for (const key in property) {
                     if (Object.prototype.hasOwnProperty.call(property, key)) {
@@ -41,7 +41,6 @@ export function css(this: jBase, property: string | Record<string, string | numb
         return this;
     }
     if (typeof property === 'string') {
-        // Getter
         if (value === undefined) {
             const el = this[0];
             if (el instanceof HTMLElement || el instanceof SVGElement) {
@@ -55,7 +54,7 @@ export function css(this: jBase, property: string | Record<string, string | numb
             }
             return '';
         }
-        this.forEach(el => {
+        this.each(function(el) {
             if (el instanceof HTMLElement || el instanceof SVGElement) {
                 if (property.includes('-')) {
                     el.style.setProperty(property, String(value));

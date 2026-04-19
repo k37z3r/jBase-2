@@ -1,6 +1,6 @@
 /**
  * @k37z3r/jbase - A modern micro-framework for the web: jBase offers the familiar syntax of classic DOM libraries, but without their baggage. Fully typed, modular, and optimized for modern browser engines.
- * @version 2.1.2
+ * @version 2.2.0
  * @homepage https://github.com/k37z3r/jBase-2
  * @author Sven Minio (https://github.com/k37z3r/jBase-2)
  * @license GPL-3.0-or-later
@@ -38,6 +38,7 @@ __export(index_exports, {
   bind: () => bind,
   data: () => data,
   debounce: () => debounce,
+  each: () => each,
   http: () => http,
   jB: () => jB,
   jBase: () => jBase2,
@@ -47,12 +48,18 @@ module.exports = __toCommonJS(index_exports);
 
 // src/core.ts
 var jBase = class extends Array {
+  /**
+   * * The original selector string or input type used to create this instance.
+   */
   selectorSource = "";
+  /**
+   * * The document context this instance is bound to (supports SSR via jsdom).
+   */
   doc;
   /**
    * * Initializes a new jBase instance. Analyzes the provided selector and populates the internal array with found or created DOM elements.
-   * @param selector
-   * * The input selector (CSS selector, HTML string, DOM element, or collection).
+   * @param selector The input selector (CSS selector, HTML string, DOM element, or collection).
+   * @param context An optional specific Document or Window context (essential for SSR).
    */
   constructor(selector, context) {
     super();
@@ -74,26 +81,26 @@ var jBase = class extends Array {
     } else if (typeof selector === "string") {
       const trimmed = selector.trim();
       if (trimmed.startsWith("<") && trimmed.endsWith(">")) {
-        const tempDiv = document.createElement("div");
+        const tempDiv = this.doc.createElement("div");
         tempDiv.innerHTML = trimmed;
         this.push(...Array.from(tempDiv.children));
       } else if (trimmed.startsWith("#") && !trimmed.includes(" ") && !trimmed.includes(".")) {
-        const el = document.getElementById(trimmed.slice(1));
+        const el = this.doc.getElementById(trimmed.slice(1));
         if (el)
           this.push(el);
       } else if (trimmed.startsWith(".") && !trimmed.includes(" ") && !/[:\[#]/.test(trimmed)) {
-        const els = document.getElementsByClassName(trimmed.slice(1));
+        const els = this.doc.getElementsByClassName(trimmed.slice(1));
         for (let i = 0; i < els.length; i++) {
           this.push(els[i]);
         }
       } else if (/^[a-zA-Z0-9]+$/.test(trimmed)) {
-        const els = document.getElementsByTagName(trimmed);
+        const els = this.doc.getElementsByTagName(trimmed);
         for (let i = 0; i < els.length; i++) {
           this.push(els[i]);
         }
       } else {
         try {
-          this.push(...Array.from(document.querySelectorAll(selector)));
+          this.push(...Array.from(this.doc.querySelectorAll(selector)));
         } catch (e) {
           console.warn(`jBase: Invalid selector "${selector}"`, e);
         }
@@ -104,8 +111,8 @@ var jBase = class extends Array {
   }
   /**
    * * Custom serializer for JSON.stringify. Prevents circular references and huge outputs by returning a simplified preview.
-   * @returns
-   * * A simplified object representation for debugging.
+   * @example toJson() => { meta: 'jBase Wrapper', query: '#myId', count: 1, preview: ['div'] }
+   * @returns A simplified object representation for debugging.
    */
   toJSON() {
     return {
@@ -119,6 +126,21 @@ var jBase = class extends Array {
       })
     };
   }
+  /**
+   * * High-performance iteration over matched elements.
+   * * Returning 'false' in the callback breaks the loop early.
+   * @example each((el, index) => { console.log(el); if (index === 5) return false; }) => Logs the first 6 matched elements to the console.
+   * @param callback The function to execute for each element. Context (`this`) is set to the current element.
+   * @returns The current jBase instance for chaining.
+   */
+  each(callback) {
+    for (let i = 0, len = this.length; i < len; i++) {
+      if (callback.call(this[i], this[i], i) === false) {
+        break;
+      }
+    }
+    return this;
+  }
 };
 
 // src/modules/css/classes.ts
@@ -130,19 +152,19 @@ __export(classes_exports, {
   toggleClass: () => toggleClass
 });
 function addClass(...classNames) {
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) el.classList.add(...classNames);
   });
   return this;
 }
 function removeClass(...classNames) {
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) el.classList.remove(...classNames);
   });
   return this;
 }
 function toggleClass(className) {
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) el.classList.toggle(className);
   });
   return this;
@@ -160,7 +182,7 @@ __export(styles_exports, {
 });
 function css(property, value) {
   if (typeof property === "object" && property !== null) {
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof HTMLElement || el instanceof SVGElement) {
         for (const key in property) {
           if (Object.prototype.hasOwnProperty.call(property, key)) {
@@ -189,7 +211,7 @@ function css(property, value) {
       }
       return "";
     }
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof HTMLElement || el instanceof SVGElement) {
         if (property.includes("-")) {
           el.style.setProperty(property, String(value));
@@ -212,19 +234,172 @@ var cssMethods = {
 var binding_exports = {};
 __export(binding_exports, {
   off: () => off,
-  on: () => on
+  on: () => on,
+  once: () => once,
+  trigger: () => trigger
 });
-function on(event, handler) {
-  this.forEach((el) => {
-    el.addEventListener(event, handler);
+
+// src/utils.ts
+function throttle(func, limit) {
+  let inThrottle;
+  return function(...args) {
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
+function debounce(func, delay) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+function isBrowser() {
+  return typeof window !== "undefined" && typeof window.requestAnimationFrame !== "undefined";
+}
+function each(collection, callback) {
+  const isArrayLike = Array.isArray(collection) || collection && typeof collection === "object" && "length" in collection && typeof collection.length === "number";
+  if (isArrayLike) {
+    const arr = collection;
+    for (let i = 0, len = arr.length; i < len; i++) {
+      if (callback.call(arr[i], i, arr[i]) === false) {
+        break;
+      }
+    }
+  } else {
+    const obj = collection;
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        if (callback.call(obj[key], key, obj[key]) === false) {
+          break;
+        }
+      }
+    }
+  }
+  return collection;
+}
+
+// src/modules/events/binding.ts
+var JB_EVENTS = "__jb_events";
+function on(events, selectorOrDataOrHandler, dataOrHandler, handlerOrUndefined) {
+  let selector;
+  let data2;
+  let handler;
+  if (typeof selectorOrDataOrHandler === "string") {
+    selector = selectorOrDataOrHandler;
+    if (typeof dataOrHandler === "function") {
+      handler = dataOrHandler;
+    } else {
+      data2 = dataOrHandler;
+      handler = handlerOrUndefined;
+    }
+  } else if (typeof selectorOrDataOrHandler === "function") {
+    handler = selectorOrDataOrHandler;
+  } else {
+    data2 = selectorOrDataOrHandler;
+    handler = dataOrHandler;
+  }
+  if (!handler) return this;
+  const eventTypes = events.split(" ");
+  this.each(function(el) {
+    if (!(el instanceof EventTarget)) return;
+    const registry = el[JB_EVENTS] || (el[JB_EVENTS] = []);
+    each(eventTypes, function(_index, eventType) {
+      const wrappedHandler = function(e) {
+        let targetContext = el;
+        if (selector) {
+          const target = e.target instanceof Element ? e.target : e.target?.parentElement;
+          const match = target instanceof Element && target.closest ? target.closest(selector) : null;
+          if (!match || !el.contains(match)) {
+            return;
+          }
+          targetContext = match;
+        }
+        if (data2 !== void 0) {
+          e.data = data2;
+        }
+        handler.call(targetContext, e);
+      };
+      registry.push({
+        type: eventType,
+        original: handler,
+        wrapped: wrappedHandler,
+        selector
+      });
+      el.addEventListener(eventType, wrappedHandler);
+    });
   });
   return this;
 }
-function off(event, handler) {
-  this.forEach((el) => {
-    el.removeEventListener(event, handler);
+function off(events, selectorOrHandler, handlerOrUndefined) {
+  let selector;
+  let handler;
+  if (typeof selectorOrHandler === "string") {
+    selector = selectorOrHandler;
+    handler = handlerOrUndefined;
+  } else if (typeof selectorOrHandler === "function") {
+    handler = selectorOrHandler;
+  }
+  const eventTypes = events.split(" ");
+  this.each(function(el) {
+    if (!(el instanceof EventTarget)) return;
+    const registry = el[JB_EVENTS];
+    if (!registry) return;
+    each(eventTypes, function(_index, eventType) {
+      for (let i = registry.length - 1; i >= 0; i--) {
+        const record = registry[i];
+        const matchType = record.type === eventType;
+        const matchSelector = selector ? record.selector === selector : true;
+        const matchHandler = handler ? record.original === handler : true;
+        if (matchType && matchSelector && matchHandler) {
+          el.removeEventListener(eventType, record.wrapped);
+          registry.splice(i, 1);
+        }
+      }
+    });
   });
   return this;
+}
+function once(events, selectorOrDataOrHandler, dataOrHandler, handlerOrUndefined) {
+  const self = this;
+  const handleOnce = function(e) {
+    self.off(events, selectorOrDataOrHandler, handleOnce);
+    let realHandler;
+    if (typeof selectorOrDataOrHandler === "function") {
+      realHandler = selectorOrDataOrHandler;
+    } else if (typeof dataOrHandler === "function") {
+      realHandler = dataOrHandler;
+    } else {
+      realHandler = handlerOrUndefined;
+    }
+    return realHandler.apply(this, arguments);
+  };
+  if (typeof selectorOrDataOrHandler === "string") {
+    if (typeof dataOrHandler === "function") {
+      return this.on(events, selectorOrDataOrHandler, handleOnce);
+    } else {
+      return this.on(events, selectorOrDataOrHandler, dataOrHandler, handleOnce);
+    }
+  } else if (typeof selectorOrDataOrHandler === "function") {
+    return this.on(events, handleOnce);
+  } else {
+    return this.on(events, selectorOrDataOrHandler, handleOnce);
+  }
+}
+function trigger(eventName, data2) {
+  return this.each(function(el) {
+    if (!(el instanceof EventTarget)) return;
+    const event = new CustomEvent(eventName, {
+      bubbles: true,
+      cancelable: true,
+      detail: data2
+    });
+    el.dispatchEvent(event);
+  });
 }
 
 // src/modules/events/mouse.ts
@@ -232,6 +407,7 @@ var mouse_exports = {};
 __export(mouse_exports, {
   click: () => click,
   dblclick: () => dblclick,
+  hover: () => hover,
   mousedown: () => mousedown,
   mouseenter: () => mouseenter,
   mouseleave: () => mouseleave,
@@ -244,7 +420,7 @@ function click(handler) {
   if (handler) {
     return this.on("click", handler);
   } else {
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof HTMLElement) el.click();
     });
     return this;
@@ -269,7 +445,7 @@ function dblclick(handler) {
   if (handler) {
     return this.on("dblclick", handler);
   } else {
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof HTMLElement) {
         el.dispatchEvent(new MouseEvent("dblclick", {
           bubbles: true,
@@ -286,6 +462,9 @@ function mouseout(handler) {
 }
 function mouseover(handler) {
   return this.on("mouseover", handler);
+}
+function hover(handlerIn, handlerOut) {
+  return this.mouseenter(handlerIn).mouseleave(handlerOut);
 }
 
 // src/modules/events/lifecycle.ts
@@ -351,7 +530,7 @@ function focus(handler) {
   if (handler) {
     return this.on("focus", handler);
   } else {
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof HTMLElement) el.focus();
     });
     return this;
@@ -361,7 +540,7 @@ function blur(handler) {
   if (handler) {
     return this.on("blur", handler);
   } else {
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof HTMLElement) el.blur();
     });
     return this;
@@ -371,6 +550,10 @@ function blur(handler) {
 // src/modules/events/touch.ts
 var touch_exports = {};
 __export(touch_exports, {
+  swipeDown: () => swipeDown,
+  swipeLeft: () => swipeLeft,
+  swipeRight: () => swipeRight,
+  swipeUp: () => swipeUp,
   touchcancel: () => touchcancel,
   touchend: () => touchend,
   touchmove: () => touchmove,
@@ -387,6 +570,49 @@ function touchmove(handler) {
 }
 function touchcancel(handler) {
   return this.on("touchcancel", handler);
+}
+function swipeLeft(handler) {
+  return this.each(function(el) {
+    if (el instanceof Element) handleSwipe.call(this, el, "left", handler);
+  });
+}
+function swipeRight(handler) {
+  return this.each(function(el) {
+    if (el instanceof Element) handleSwipe.call(this, el, "right", handler);
+  });
+}
+function swipeUp(handler) {
+  return this.each(function(el) {
+    if (el instanceof Element) handleSwipe.call(this, el, "up", handler);
+  });
+}
+function swipeDown(handler) {
+  return this.each(function(el) {
+    if (el instanceof Element) handleSwipe.call(this, el, "down", handler);
+  });
+}
+function handleSwipe(el, direction, handler) {
+  let startX = 0, startY = 0;
+  el.addEventListener("touchstart", (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  el.addEventListener("touchend", (e) => {
+    const diffX = e.changedTouches[0].clientX - startX;
+    const diffY = e.changedTouches[0].clientY - startY;
+    const threshold = 50;
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      if (Math.abs(diffX) > threshold) {
+        if (diffX > 0 && direction === "right") handler.call(el, e);
+        if (diffX < 0 && direction === "left") handler.call(el, e);
+      }
+    } else {
+      if (Math.abs(diffY) > threshold) {
+        if (diffY > 0 && direction === "down") handler.call(el, e);
+        if (diffY < 0 && direction === "up") handler.call(el, e);
+      }
+    }
+  }, { passive: true });
 }
 
 // src/modules/events/index.ts
@@ -412,7 +638,7 @@ function attr(name, value) {
     const el = this[0];
     return el instanceof Element ? el.getAttribute(name) : null;
   }
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) el.setAttribute(name, value);
   });
   return this;
@@ -425,7 +651,7 @@ function val(value) {
     }
     return "";
   }
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
       el.value = value;
     }
@@ -433,7 +659,7 @@ function val(value) {
   return this;
 }
 function removeAttr(name) {
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) el.removeAttribute(name);
   });
   return this;
@@ -443,7 +669,7 @@ function prop(name, value) {
     const el = this[0];
     return el instanceof Element ? el[name] : void 0;
   }
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       el[name] = value;
     }
@@ -462,7 +688,7 @@ function html(content) {
     const el = this[0];
     return el instanceof Element ? el.innerHTML : "";
   }
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) el.innerHTML = content;
   });
   return this;
@@ -472,7 +698,7 @@ function text(content) {
     const el = this[0];
     return el instanceof Node ? el.textContent || "" : "";
   }
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       el.textContent = content;
     }
@@ -521,27 +747,29 @@ function normalizeToFragment(content, doc) {
     } else if (item instanceof Node) {
       fragment.appendChild(item);
     } else if (item instanceof jBase || Array.isArray(item) || item instanceof NodeList) {
-      Array.from(item).forEach((child) => add2(child));
+      each(item, function(_index, child) {
+        add2(child);
+      });
     }
   };
   add2(content);
   return fragment;
 }
 function remove() {
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) el.remove();
   });
   return this;
 }
 function empty() {
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) el.innerHTML = "";
   });
   return this;
 }
 function replaceWithClone() {
   const newElements = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       const clone = el.cloneNode(true);
       el.replaceWith(clone);
@@ -552,7 +780,7 @@ function replaceWithClone() {
 }
 function append(content) {
   if (typeof content === "string") {
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof Element) {
         el.insertAdjacentHTML("beforeend", content);
       }
@@ -563,9 +791,10 @@ function append(content) {
   if (!doc)
     return this;
   const fragment = normalizeToFragment(content, doc);
-  this.forEach((el, i) => {
+  const len = this.length;
+  this.each(function(el, i) {
     if (el instanceof Element) {
-      const contentToInsert = i < this.length - 1 ? fragment.cloneNode(true) : fragment;
+      const contentToInsert = i < len - 1 ? fragment.cloneNode(true) : fragment;
       el.appendChild(contentToInsert);
     }
   });
@@ -573,7 +802,7 @@ function append(content) {
 }
 function prepend(content) {
   if (typeof content === "string") {
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof Element) {
         el.insertAdjacentHTML("afterbegin", content);
       }
@@ -584,9 +813,10 @@ function prepend(content) {
   if (!doc)
     return this;
   const fragment = normalizeToFragment(content, doc);
-  this.forEach((el, i) => {
+  const len = this.length;
+  this.each(function(el, i) {
     if (el instanceof Element) {
-      const contentToInsert = i < this.length - 1 ? fragment.cloneNode(true) : fragment;
+      const contentToInsert = i < len - 1 ? fragment.cloneNode(true) : fragment;
       el.prepend(contentToInsert);
     }
   });
@@ -594,7 +824,7 @@ function prepend(content) {
 }
 function before(content) {
   if (typeof content === "string") {
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof Element) {
         el.insertAdjacentHTML("beforebegin", content);
       }
@@ -605,9 +835,10 @@ function before(content) {
   if (!doc)
     return this;
   const fragment = normalizeToFragment(content, doc);
-  this.forEach((el, i) => {
+  const len = this.length;
+  this.each(function(el, i) {
     if (el instanceof Element) {
-      const contentToInsert = i < this.length - 1 ? fragment.cloneNode(true) : fragment;
+      const contentToInsert = i < len - 1 ? fragment.cloneNode(true) : fragment;
       el.before(contentToInsert);
     }
   });
@@ -615,7 +846,7 @@ function before(content) {
 }
 function after(content) {
   if (typeof content === "string") {
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof Element) {
         el.insertAdjacentHTML("afterend", content);
       }
@@ -626,9 +857,10 @@ function after(content) {
   if (!doc)
     return this;
   const fragment = normalizeToFragment(content, doc);
-  this.forEach((el, i) => {
+  const len = this.length;
+  this.each(function(el, i) {
     if (el instanceof Element) {
-      const contentToInsert = i < this.length - 1 ? fragment.cloneNode(true) : fragment;
+      const contentToInsert = i < len - 1 ? fragment.cloneNode(true) : fragment;
       el.after(contentToInsert);
     }
   });
@@ -639,9 +871,10 @@ function replaceWith(content) {
   if (!doc)
     return this;
   const fragment = normalizeToFragment(content, doc);
-  this.forEach((el, i) => {
+  const len = this.length;
+  this.each(function(el, i) {
     if (el instanceof Element) {
-      const contentToInsert = i < this.length - 1 ? fragment.cloneNode(true) : fragment;
+      const contentToInsert = i < len - 1 ? fragment.cloneNode(true) : fragment;
       el.replaceWith(contentToInsert);
     }
   });
@@ -654,7 +887,7 @@ function appendTo(target) {
   const parent2 = typeof target === "string" ? doc.querySelector(target) : target;
   if (parent2 instanceof Element) {
     const fragment = doc.createDocumentFragment();
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof Node) fragment.appendChild(el);
     });
     parent2.appendChild(fragment);
@@ -668,7 +901,7 @@ function prependTo(target) {
   const parent2 = typeof target === "string" ? doc.querySelector(target) : target;
   if (parent2 instanceof Element) {
     const fragment = doc.createDocumentFragment();
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof Node) fragment.appendChild(el);
     });
     parent2.prepend(fragment);
@@ -682,7 +915,7 @@ function insertBefore(target) {
   const targetEl = typeof target === "string" ? doc.querySelector(target) : target;
   if (targetEl instanceof Element) {
     const fragment = doc.createDocumentFragment();
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof Node) fragment.appendChild(el);
     });
     targetEl.before(fragment);
@@ -696,7 +929,7 @@ function insertAfter(target) {
   const targetEl = typeof target === "string" ? doc.querySelector(target) : target;
   if (targetEl instanceof Element) {
     const fragment = doc.createDocumentFragment();
-    this.forEach((el) => {
+    this.each(function(el) {
       if (el instanceof Node) fragment.appendChild(el);
     });
     targetEl.after(fragment);
@@ -707,7 +940,7 @@ function wrap(wrapperHtml) {
   const doc = getDoc(this);
   if (!doc)
     return this;
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       const wrapper = parseHTML(wrapperHtml, doc);
       if (el.parentNode) {
@@ -720,15 +953,14 @@ function wrap(wrapperHtml) {
 }
 function unwrap() {
   const doc = getDoc(this);
-  if (!doc)
-    return this;
+  if (!doc) return this;
   const parents2 = /* @__PURE__ */ new Set();
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element && el.parentElement) {
       parents2.add(el.parentElement);
     }
   });
-  parents2.forEach((parent2) => {
+  each(Array.from(parents2), function(_index, parent2) {
     const fragment = doc.createDocumentFragment();
     while (parent2.firstChild) {
       fragment.appendChild(parent2.firstChild);
@@ -767,7 +999,7 @@ __export(traversal_exports, {
 });
 function closest(selector) {
   const found = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       const match = el.closest(selector);
       if (match) {
@@ -780,7 +1012,7 @@ function closest(selector) {
 }
 function parent() {
   const parents2 = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element && el.parentElement) {
       parents2.push(el.parentElement);
     }
@@ -790,7 +1022,7 @@ function parent() {
 }
 function children(selector) {
   let allChildren = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       const kids = Array.from(el.children);
       allChildren = allChildren.concat(kids);
@@ -804,10 +1036,12 @@ function children(selector) {
 }
 function findAll(selector) {
   const found = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element || el instanceof Document) {
       const matches = el.querySelectorAll(selector);
-      matches.forEach((m) => found.push(m));
+      each(matches, function(_index, m) {
+        found.push(m);
+      });
     }
   });
   const Construction = this.constructor;
@@ -818,7 +1052,7 @@ function descendants() {
 }
 function parents(selector) {
   const ancestors = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       let curr = el.parentElement;
       while (curr) {
@@ -834,7 +1068,7 @@ function parents(selector) {
 }
 function parentsUntil(selector, filter) {
   const ancestors = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       let curr = el.parentElement;
       while (curr && !curr.matches(selector)) {
@@ -863,7 +1097,7 @@ function descendantsUntil(untilSelector, filter) {
       traverse(child);
     }
   };
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) traverse(el);
   });
   const Construction = this.constructor;
@@ -871,7 +1105,7 @@ function descendantsUntil(untilSelector, filter) {
 }
 function next(selector) {
   const found = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element && el.nextElementSibling) {
       const nextEl = el.nextElementSibling;
       if (!selector || nextEl.matches(selector)) {
@@ -884,7 +1118,7 @@ function next(selector) {
 }
 function prev(selector) {
   const found = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element && el.previousElementSibling) {
       const prevEl = el.previousElementSibling;
       if (!selector || prevEl.matches(selector)) {
@@ -906,7 +1140,7 @@ function sibling(selector) {
 }
 function nextAll(selector) {
   const found = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       let curr = el.nextElementSibling;
       while (curr) {
@@ -922,7 +1156,7 @@ function nextAll(selector) {
 }
 function prevAll(selector) {
   const found = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       let curr = el.previousElementSibling;
       while (curr) {
@@ -938,10 +1172,10 @@ function prevAll(selector) {
 }
 function siblings(selector) {
   const found = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element && el.parentElement) {
       const children2 = Array.from(el.parentElement.children);
-      children2.forEach((child) => {
+      each(children2, function(_index, child) {
         if (child !== el) {
           if (!selector || child.matches(selector)) {
             found.push(child);
@@ -955,7 +1189,7 @@ function siblings(selector) {
 }
 function nextUntil(untilSelector, filter) {
   const found = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       let curr = el.nextElementSibling;
       while (curr && !curr.matches(untilSelector)) {
@@ -971,7 +1205,7 @@ function nextUntil(untilSelector, filter) {
 }
 function prevUntil(untilSelector, filter) {
   const found = [];
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof Element) {
       let curr = el.previousElementSibling;
       while (curr && !curr.matches(untilSelector)) {
@@ -1000,7 +1234,7 @@ function last() {
 }
 function filterBy(selectorOrFn) {
   const found = [];
-  this.forEach((el, index) => {
+  this.each(function(el, index) {
     if (el instanceof Element) {
       if (typeof selectorOrFn === "string") {
         if (el.matches(selectorOrFn)) {
@@ -1018,7 +1252,7 @@ function filterBy(selectorOrFn) {
 }
 function not(selectorOrFn) {
   const found = [];
-  this.forEach((el, index) => {
+  this.each(function(el, index) {
     if (el instanceof Element) {
       if (typeof selectorOrFn === "string") {
         if (!el.matches(selectorOrFn)) {
@@ -1047,7 +1281,7 @@ function checked(state) {
     const el = this[0];
     return el instanceof HTMLInputElement ? el.checked : false;
   }
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLInputElement)
       el.checked = state;
   });
@@ -1058,7 +1292,7 @@ function selected(state) {
     const el = this[0];
     return el instanceof HTMLOptionElement ? el.selected : false;
   }
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLOptionElement)
       el.selected = state;
   });
@@ -1069,7 +1303,7 @@ function disabled(state) {
     const el = this[0];
     return el instanceof HTMLElement && "disabled" in el ? el.disabled : false;
   }
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement && "disabled" in el) {
       el.disabled = state;
       if (state)
@@ -1097,36 +1331,11 @@ __export(slide_exports, {
   slideOut: () => slideOut,
   slideToggle: () => slideToggle
 });
-
-// src/utils.ts
-function throttle(func, limit) {
-  let inThrottle;
-  return function(...args) {
-    const context = this;
-    if (!inThrottle) {
-      func.apply(context, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
-    }
-  };
-}
-function debounce(func, delay) {
-  let timer;
-  return function(...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => func.apply(this, args), delay);
-  };
-}
-function isBrowser() {
-  return typeof window !== "undefined" && typeof window.requestAnimationFrame !== "undefined";
-}
-
-// src/modules/effects/slide.ts
 function slideIn(options = {}) {
   if (!isBrowser())
     return this;
   const { duration = 300 } = options;
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       el.style.willChange = "transform";
       el.style.transition = `transform ${duration}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
@@ -1143,7 +1352,7 @@ function slideOut(options = {}) {
     return this;
   const { direction = "left", duration = 300 } = options;
   const translateValue = direction === "left" ? "-100%" : "100%";
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       el.style.willChange = "transform";
       el.style.transition = `transform ${duration}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
@@ -1158,7 +1367,7 @@ function slideOut(options = {}) {
 function slideToggle(options = {}) {
   if (!isBrowser())
     return this;
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       const state = el.getAttribute("data-slide-state");
       const currentTransform = el.style.transform;
@@ -1185,7 +1394,7 @@ function slideDown(options = {}) {
   if (!isBrowser())
     return this;
   const { duration = 300, displayType = "block" } = options;
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       if (window.getComputedStyle(el).display !== "none")
         return;
@@ -1209,7 +1418,7 @@ function slideUp(options = {}) {
   if (!isBrowser())
     return this;
   const { duration = 300 } = options;
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       el.style.height = `${el.scrollHeight}px`;
       el.style.overflow = "hidden";
@@ -1229,7 +1438,7 @@ function slideUp(options = {}) {
 function slideToggleBox(options = {}) {
   if (!isBrowser())
     return this;
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       const display = window.getComputedStyle(el).display;
       const wrapper = new this.constructor(el);
@@ -1254,7 +1463,7 @@ function fadeIn(options = {}) {
   if (!isBrowser())
     return this;
   const { duration = 300, displayType = "block" } = options;
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       el.style.opacity = "0";
       el.style.display = displayType;
@@ -1274,7 +1483,7 @@ function fadeOut(options = {}) {
   if (!isBrowser())
     return this;
   const { duration = 300 } = options;
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       el.style.opacity = "1";
       el.style.transition = `opacity ${duration}ms ease-in-out`;
@@ -1293,7 +1502,7 @@ function fadeOut(options = {}) {
 function fadeToggle(options = {}) {
   if (!isBrowser())
     return this;
-  this.forEach((el) => {
+  this.each(function(el) {
     if (el instanceof HTMLElement) {
       const display = window.getComputedStyle(el).display;
       const wrapper = new this.constructor(el);
@@ -1418,10 +1627,11 @@ function add(array, item, index = array.length) {
 var remove2 = {
   /**
    * * Removes an element at a specific index.
-   * @param array
-   * * The array.
-   * @param index
-   * * The index (negative values allowed).
+   * @example remove.at([1, 2, 3, 4], -2) => [1, 2, 4]
+   * @template T The type of the items in the array.
+   * @param array The array.
+   * @param index The index (negative values allowed).
+   * @returns A new array with the element removed.
    */
   at(array, index) {
     const copy = [...array];
@@ -1433,32 +1643,30 @@ var remove2 = {
   },
   /**
    * * Removes the first element.
-   * @param array
-   * * The array.
+   * @example remove.first([1, 2, 3]) => [2, 3]
+   * @template T The type of the items in the array.
+   * @param array The array.
    */
   first(array) {
     return array.slice(1);
   },
   /**
    * * Removes the last element.
-   * @param array
-   * * The array.
+   * @example remove.last([1, 2, 3]) => [1, 2]
+   * @template T The type of the items in the array.
+   * @param array The array.
    */
   last(array) {
     return array.slice(0, -1);
   },
   /**
    * * Removes all elements matching a query condition.
-   * @example
-   * remove.byMatch(users, 'Admin', 'exact', 'role')
-   * @param array
-   * * The array.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @param key
-   * * (Optional) The object key if it is an array of objects.
+   * @example remove.byMatch(users, 'Admin', 'exact', 'role')
+   * @template T The type of the items in the array.
+   * @param array The array.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param key (Optional) The object key if it is an array of objects.
    */
   byMatch(array, query, mode = "exact", key) {
     const queryStr = String(query).toLowerCase();
@@ -1483,16 +1691,13 @@ var remove2 = {
 var find = {
   /**
    * * Finds the index of the first match.
-   * @param array
-   * * The array.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @param key
-   * * (Optional) The object key if it is an array of objects.
-   * @returns
-   * * Index or -1.
+   * @example find.at(['apple', 'banana', 'cherry'], 'an', 'contains') => 1
+   * @template T The type of the items in the array.
+   * @param array The array.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param key (Optional) The object key if it is an array of objects.
+   * @returns Index or -1.
    */
   at(array, query, mode = "exact", key) {
     const queryStr = String(query).toLowerCase();
@@ -1515,16 +1720,13 @@ var find = {
   },
   /**
    * * Returns all elements matching the condition (Filter).
-   * @param array
-   * * The array.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @param key
-   * * (Optional) The object key if it is an array of objects.
-   * @returns
-   * * All matching elements or -1.
+   * @example find.all(['apple', 'banana', 'cherry'], 'a', 'contains') => ['apple', 'banana']
+   * @template T The type of the items in the array.
+   * @param array The array.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param key (Optional) The object key if it is an array of objects.
+   * @returns All matching elements or -1.
    */
   all(array, query, mode = "exact", key) {
     const queryStr = String(query).toLowerCase();
@@ -1547,16 +1749,13 @@ var find = {
   },
   /**
    * * Returns the first matching element (or undefined).
-   * @param array
-   * * The array.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @param key
-   * * (Optional) The object key if it is an array of objects.
-   * @returns
-   * * Index or -1.
+   * @example find.first(['apple', 'banana', 'cherry'], 'a', 'contains') => 'apple'
+   * @template T The type of the items in the array.
+   * @param array The array.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param key (Optional) The object key if it is an array of objects.
+   * @returns Index or -1.
    */
   first(array, query, mode = "exact", key) {
     const queryStr = String(query).toLowerCase();
@@ -1579,16 +1778,13 @@ var find = {
   },
   /**
    * * Returns the last matching element (or undefined).
-   * @param array
-   * * The array.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @param key
-   * * (Optional) The object key if it is an array of objects.
-   * @returns
-   * * Index or -1.
+   * @example find.last(['apple', 'banana', 'cherry'], 'a', 'contains') => 'banana'
+   * @template T The type of the items in the array.
+   * @param array The array.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param key (Optional) The object key if it is an array of objects.
+   * @returns Index or -1.
    */
   last(array, query, mode = "exact", key) {
     const queryStr = String(query).toLowerCase();
@@ -1611,18 +1807,13 @@ var find = {
   },
   /**
    * * Removes all elements matching a query condition.
-   * @example
-   * find.byMatch(users, 'Admin', 'exact', 'role')
-   * @param array
-   * * The array.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @param key
-   * * (Optional) The object key if it is an array of objects.
-   * @returns
-   * * Index or -1.
+   * @example find.byMatch(users, 'Admin', 'exact', 'role') => 0
+   * @template T The type of the items in the array.
+   * @param array The array.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param key (Optional) The object key if it is an array of objects.
+   * @returns Index or -1.
    */
   byMatch(array, query, mode = "exact", key) {
     const queryStr = String(query).toLowerCase();
@@ -1675,14 +1866,14 @@ function mergeObjects(target, ...sources) {
 }
 function pick(obj, keys) {
   const ret = {};
-  keys.forEach((key) => {
+  each(keys, function(_index, key) {
     if (key in obj) ret[key] = obj[key];
   });
   return ret;
 }
 function omit(obj, keys) {
   const ret = { ...obj };
-  keys.forEach((key) => {
+  each(keys, function(_index, key) {
     delete ret[key];
   });
   return ret;
@@ -1704,12 +1895,9 @@ var find2 = {
   /**
    * * Returns the n-th entry of an object as a [key, value] pair. Supports negative indices.
    * @example find.at({ a: 1, b: 2 }, 1) => ['b', 2]
-   * @param obj
-   * * The object to search.
-   * @param index
-   * * The index (0-based, negative counts from the back).
-   * @returns
-   * * A [key, value] tuple or undefined.
+   * @param obj The object to search.
+   * @param index The index (0-based, negative counts from the back).
+   * @returns A [key, value] tuple or undefined.
    */
   at(obj, index) {
     const entries = Object.entries(obj);
@@ -1719,16 +1907,11 @@ var find2 = {
   /**
    * * Finds the first entry where the key or value matches the query.
    * @example find.first(config, 'admin', 'exact', 'key')
-   * @param obj
-   * * The object to search.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @param searchBy
-   * * Whether to search by 'key' or 'value'.
-   * @returns
-   * * The first matching [key, value] pair or undefined.
+   * @param obj The object to search.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param searchBy Whether to search by 'key' or 'value'.
+   * @returns The first matching [key, value] pair or undefined.
    */
   first(obj, query, mode = "exact", searchBy = "key") {
     const entries = Object.entries(obj);
@@ -1753,16 +1936,11 @@ var find2 = {
   /**
    * * Finds the last entry where the key or value matches the query.
    * @example find.last(config, '.php', 'endsWith', 'key')
-   * @param obj
-   * * The object to search.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @param searchBy
-   * * Whether to search by 'key' or 'value'.
-   * @returns
-   * * The last matching [key, value] pair or undefined.
+   * @param obj The object to search.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param searchBy Whether to search by 'key' or 'value'.
+   * @returns The last matching [key, value] pair or undefined.
    */
   last(obj, query, mode = "exact", searchBy = "key") {
     const entries = Object.entries(obj);
@@ -1787,14 +1965,10 @@ var find2 = {
   /**
    * * Finds all keys matching the query.
    * @example find.key(config, 'api_', 'startsWith')
-   * @param obj
-   * * The object to search.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @returns
-   * * An array of matching keys.
+   * @param obj The object to search.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @returns An array of matching keys.
    */
   key(obj, query, mode = "exact") {
     const queryStr = String(query).toLowerCase();
@@ -1816,14 +1990,11 @@ var find2 = {
   },
   /**
    * * Finds all values matching the query.
-   * @param obj
-   * * The object to search.
-   * @param query
-   * * The search query.
-   * @param mode
-   * * The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
-   * @returns
-   * * An array of matching values.
+   * @example find.value(config, 'enabled', 'exact')
+   * @param obj The object to search.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @returns An array of matching values.
    */
   value(obj, query, mode = "exact") {
     const queryStr = String(query).toLowerCase();
@@ -1865,6 +2036,9 @@ var initFn = (selector) => {
 var init = Object.assign(initFn, {
   http,
   data,
+  each,
+  throttle,
+  debounce,
   fn: jBase.prototype
 });
 var bind = (window2) => {
@@ -1873,7 +2047,10 @@ var bind = (window2) => {
   Object.assign(boundInit, {
     fn: jBase.prototype,
     http,
-    data
+    data,
+    each,
+    throttle,
+    debounce
   });
   return boundInit;
 };
@@ -1897,6 +2074,7 @@ var __ = init;
   bind,
   data,
   debounce,
+  each,
   http,
   jB,
   jBase,
@@ -1904,7 +2082,7 @@ var __ = init;
 });
 /**
  * @file src/core.ts
- * @version 2.0.2
+ * @version 2.2.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -1912,10 +2090,12 @@ var __ = init;
  * @category Core
  * @description
  * * The main jBase class. Handles the selection engine, initialization, and plugin architecture.
+ * @requires ./types
+ * * Type definitions for the core class and its methods.
  */
 /**
  * @file src/modules/css/classes.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -1928,7 +2108,7 @@ var __ = init;
  */
 /**
  * @file src/modules/css/styles.ts
- * @version 2.0.3
+ * @version 2.0.4
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -1941,7 +2121,7 @@ var __ = init;
  */
 /**
  * @file src/modules/css/index.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -1955,8 +2135,19 @@ var __ = init;
  * * Style manipulation methods (css).
  */
 /**
+ * @file src/utils.ts
+ * @version 2.1.0
+ * @since 2.0.0
+ * @license GPL-3.0-or-later
+ * @copyright Sven Minio 2026
+ * @author Sven Minio <https://sven-minio.de>
+ * @category Utilities
+ * @description
+ * * General utility functions and helpers (e.g., debounce, throttle, type checks).
+ */
+/**
  * @file src/modules/events/binding.ts
- * @version 2.0.2
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -1966,10 +2157,12 @@ var __ = init;
  * * Core event binding methods (on, off, trigger). Handles event registration and removal.
  * @requires ../../core
  * * Depends on the core jBase class for type definitions.
+ * @requires ../../utils
+ * * Uses utility functions for iteration and environment checks.
  */
 /**
  * @file src/modules/events/mouse.ts
- * @version 2.0.2
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -1982,7 +2175,7 @@ var __ = init;
  */
 /**
  * @file src/modules/events/lifecycle.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -1995,7 +2188,7 @@ var __ = init;
  */
 /**
  * @file src/modules/events/keyboard.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2008,7 +2201,7 @@ var __ = init;
  */
 /**
  * @file src/modules/events/form.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2021,7 +2214,7 @@ var __ = init;
  */
 /**
  * @file src/modules/events/touch.ts
- * @version 2.0.2
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2057,7 +2250,7 @@ var __ = init;
  */
 /**
  * @file src/modules/dom/attributes.ts
- * @version 2.1.0
+ * @version 2.1.1
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2070,7 +2263,7 @@ var __ = init;
  */
 /**
  * @file src/modules/dom/content.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2083,7 +2276,7 @@ var __ = init;
  */
 /**
  * @file src/modules/dom/manipulation.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2093,10 +2286,12 @@ var __ = init;
  * * Methods for inserting, moving, and removing elements (append, prepend, remove).
  * @requires ../../core
  * * Depends on the core jBase class for type definitions.
+ * @requires src/utils
+ * * Depends on utility functions (e.g., each).
  */
 /**
  * @file src/modules/dom/traversal.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2106,10 +2301,12 @@ var __ = init;
  * * Methods for navigating the DOM tree (find, parent, children, siblings).
  * @requires ../../core
  * * Depends on the core jBase class for type definitions.
+ * @requires ../../utils
+ * * Utility functions (e.g., `each` for iteration).
  */
 /**
  * @file src/modules/dom/states.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2122,7 +2319,7 @@ var __ = init;
  */
 /**
  * @file src/modules/dom/index.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2142,19 +2339,8 @@ var __ = init;
  * * State checks (checked, disabled).
  */
 /**
- * @file src/utils.ts
- * @version 2.0.2
- * @since 2.0.0
- * @license GPL-3.0-or-later
- * @copyright Sven Minio 2026
- * @author Sven Minio <https://sven-minio.de>
- * @category Utilities
- * @description
- * * General utility functions and helpers (e.g., debounce, throttle, type checks).
- */
-/**
  * @file src/modules/effects/slide.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2164,10 +2350,14 @@ var __ = init;
  * * Methods for horizontal sliding effects (slideIn, slideOut, slideToggle).
  * @requires ../../core
  * * Depends on the core jBase class for type definitions.
+ * @requires ../../utils
+ * * Uses utility functions for environment checks.
+ * @requires ./types
+ * * Type definitions for slide options.
  */
 /**
  * @file src/modules/effects/vertical.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2177,10 +2367,14 @@ var __ = init;
  * * Methods for vertical sliding effects (slideDown, slideUp, slideToggle).
  * @requires ../../core
  * * Depends on the core jBase class for type definitions.
+ * @requires ../../utils
+ * * Utility function to check for browser environment.
+ * @requires ./types
+ * * Type definitions for effect options.
  */
 /**
  * @file src/modules/effects/fade.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2190,10 +2384,14 @@ var __ = init;
  * * Methods for fading elements in and out (fadeIn, fadeOut, fadeToggle).
  * @requires ../../core
  * * Depends on the core jBase class for type definitions.
+ * @requires ../../utils
+ * * Uses utility functions for environment checks.
+ * @requires ./types
+ * * Type definitions for fade options.
  */
 /**
  * @file src/modules/effects/index.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2210,7 +2408,7 @@ var __ = init;
  */
 /**
  * @file src/modules/http/get.ts
- * @version 2.0.4
+ * @version 2.0.5
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2218,12 +2416,10 @@ var __ = init;
  * @category HTTP
  * @description
  * * Abstraction for HTTP GET requests.
- * @requires ../../core
- * * Depends on the core jBase class for type definitions.
  */
 /**
  * @file src/modules/http/post.ts
- * @version 2.0.3
+ * @version 2.0.4
  * @since 2.0.2
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2231,8 +2427,6 @@ var __ = init;
  * @category HTTP
  * * @description
  * * Abstraction for HTTP POST requests.
- * @requires ../../core
- * * Depends on the core jBase class for type definitions.
  */
 /**
  * @file src/modules/http/index.ts
@@ -2251,7 +2445,7 @@ var __ = init;
  */
 /**
  * @file src/modules/data/arrays.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2264,7 +2458,7 @@ var __ = init;
  */
 /**
  * @file src/modules/data/objects.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2274,10 +2468,12 @@ var __ = init;
  * * Utility functions for object manipulation (e.g., deep merging, extension).
  * @requires ./types
  * * Depends on types.
+ * @requires src/utils
+ * * Depends on utility functions (e.g., each).
  */
 /**
  * @file src/modules/data/index.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2292,7 +2488,7 @@ var __ = init;
  */
 /**
  * @file src/index.ts
- * @version 2.1.2
+ * @version 2.2.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026

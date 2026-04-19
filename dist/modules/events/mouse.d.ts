@@ -1,6 +1,6 @@
 /**
  * @file src/modules/events/mouse.ts
- * @version 2.0.2
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -13,79 +13,77 @@
  */
 import { jBase } from '../../core';
 /**
- * * Binds an event handler to the 'click' event or triggers the event manually.
- * - With handler: Registers the function.
- * - Without handler: Simulates a click on all selected elements.
- * - Mit Handler: Registriert die Funktion.
- * - Ohne Handler: Simuliert einen Klick auf alle selektierten Elemente.
- * @param handler
- * * (Optional) The callback function executed on click.
- * @returns
- * * The current jBase instance.
+ * * Binds an event handler to the "click" JavaScript event, or triggers that event on an element.
+ * * If no handler is provided, it programmatically triggers a native click on all matched elements.
+ * @example click(handler) => Binds a click event handler to all matched elements.
+ * @example click() => Programmatically triggers a click event on all matched elements.
+ * @param handler (Optional) A function to execute each time the click event is triggered.
+ * @returns The current jBase instance for method chaining.
  */
 export declare function click(this: jBase, handler?: (event: Event) => void): jBase;
 /**
  * * Binds an event handler to the 'mousemove' event. Fires continuously while the pointer moves inside the element.
- * @param handler
- * * The callback function.
- * @returns
- * * The current jBase instance.
+ * @example mousemove(handler) => Binds a mousemove event handler to all matched elements.
+ * @param handler The callback function.
+ * @returns The current jBase instance.
  */
 export declare function mousemove(this: jBase, handler: (event: MouseEvent) => void): jBase;
 /**
  * * Binds an event handler to the 'mouseleave' event. Fires when the pointer leaves the element (does not bubble).
- * @param handler
- * * The callback function.
- * @returns
- * * The current jBase instance.
+ * @example mouseleave(handler) => Binds a mouseleave event handler to all matched elements.
+ * @param handler The callback function.
+ * @returns The current jBase instance.
  */
 export declare function mouseleave(this: jBase, handler: (event: MouseEvent) => void): jBase;
 /**
  * * Binds an event handler to the 'mouseenter' event. Fires when the pointer enters the element (does not bubble).
- * @param handler
- * * The callback function.
- * @returns
- * * The current jBase instance.
+ * @example mouseenter(handler) => Binds a mouseenter event handler to all matched elements.
+ * @param handler The callback function.
+ * @returns The current jBase instance.
  */
 export declare function mouseenter(this: jBase, handler: (event: MouseEvent) => void): jBase;
 /**
  * * Binds an event handler to the 'mousedown' event. Fires as soon as a mouse button is pressed over the element.
- * @param handler
- * * The callback function.
- * @returns
- * * The current jBase instance.
+ * @example mousedown(handler) => Binds a mousedown event handler to all matched elements.
+ * @param handler The callback function.
+ * @returns The current jBase instance.
  */
 export declare function mousedown(this: jBase, handler: (event: MouseEvent) => void): jBase;
 /**
  * * Binds an event handler to the 'mouseup' event. Fires when a mouse button is released over the element.
- * @param handler
- * * The callback function.
- * @returns
- * * The current jBase instance.
+ * @example mouseup(handler) => Binds a mouseup event handler to all matched elements.
+ * @param handler The callback function.
+ * @returns The current jBase instance.
  */
 export declare function mouseup(this: jBase, handler: (event: MouseEvent) => void): jBase;
 /**
  * * Binds an event handler to the 'dblclick' event or triggers it manually.
- * @param handler
- * * (Optional) The callback function.
- * @returns
- * * The current jBase instance.
+ * @example dblclick(handler) => Binds a dblclick event handler to all matched elements.
+ * @param handler (Optional) The callback function.
+ * @returns The current jBase instance.
  */
 export declare function dblclick(this: jBase, handler?: (event: MouseEvent) => void): jBase;
 /**
  * * Binds an event handler to the 'mouseout' event. Fires when the pointer leaves the element OR one of its children (bubbles).
- * @param handler
- * * The callback function.
- * @returns
- * * The current jBase instance.
+ * @example mouseout(handler) => Binds a mouseout event handler to all matched elements.
+ * @param handler The callback function.
+ * @returns The current jBase instance.
  */
 export declare function mouseout(this: jBase, handler: (event: MouseEvent) => void): jBase;
 /**
  * * Binds an event handler to the 'mouseover' event. Fires when the pointer enters the element OR one of its children (bubbles).
- * @param handler
- * * The callback function.
- * @returns
- * * The current jBase instance.
+ * @example mouseover(handler) => Binds a mouseover event handler to all matched elements.
+ * @param handler The callback function.
+ * @returns The current jBase instance.
  */
 export declare function mouseover(this: jBase, handler: (event: MouseEvent) => void): jBase;
+/**
+ * * Binds two handlers to the matched elements, to be executed when the mouse pointer enters and leaves the elements.
+ * * This is a highly convenient shorthand for chaining `.mouseenter()` and `.mouseleave()`.
+ * @example hover(handlerIn, handlerOut) => Binds handlerIn to mouseenter and handlerOut to mouseleave for all matched elements.
+ * @param handlerIn A function to execute when the mouse pointer enters the element.
+ * @param handlerOut A function to execute when the mouse pointer leaves the element.
+ * @returns The current jBase instance for method chaining.
+ */
+export declare function hover(this: jBase, handlerIn: (event: MouseEvent) => void, handlerOut: (event: MouseEvent) => void): jBase;
 //# sourceMappingURL=mouse.d.ts.map

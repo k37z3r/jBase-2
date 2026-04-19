@@ -29,6 +29,10 @@ export declare const eventMethods: {
     touchend(this: import("../..").JBaseClass, handler: (event: TouchEvent) => void): import("../..").JBaseClass;
     touchmove(this: import("../..").JBaseClass, handler: (event: TouchEvent) => void): import("../..").JBaseClass;
     touchcancel(this: import("../..").JBaseClass, handler: (event: TouchEvent) => void): import("../..").JBaseClass;
+    swipeLeft(this: import("../..").JBaseClass, handler: (e: TouchEvent) => void): import("../..").JBaseClass;
+    swipeRight(this: import("../..").JBaseClass, handler: (e: TouchEvent) => void): import("../..").JBaseClass;
+    swipeUp(this: import("../..").JBaseClass, handler: (e: TouchEvent) => void): import("../..").JBaseClass;
+    swipeDown(this: import("../..").JBaseClass, handler: (e: TouchEvent) => void): import("../..").JBaseClass;
     submit(this: import("../..").JBaseClass, handler: (event: SubmitEvent) => void): import("../..").JBaseClass;
     change(this: import("../..").JBaseClass, handler: (event: Event) => void): import("../..").JBaseClass;
     input(this: import("../..").JBaseClass, handler: (event: Event) => void): import("../..").JBaseClass;
@@ -48,7 +52,10 @@ export declare const eventMethods: {
     dblclick(this: import("../..").JBaseClass, handler?: (event: MouseEvent) => void): import("../..").JBaseClass;
     mouseout(this: import("../..").JBaseClass, handler: (event: MouseEvent) => void): import("../..").JBaseClass;
     mouseover(this: import("../..").JBaseClass, handler: (event: MouseEvent) => void): import("../..").JBaseClass;
-    on(this: import("../..").JBaseClass, event: string, handler: EventListenerOrEventListenerObject): import("../..").JBaseClass;
-    off(this: import("../..").JBaseClass, event: string, handler: EventListenerOrEventListenerObject): import("../..").JBaseClass;
+    hover(this: import("../..").JBaseClass, handlerIn: (event: MouseEvent) => void, handlerOut: (event: MouseEvent) => void): import("../..").JBaseClass;
+    on(this: import("../..").JBaseClass, events: string, selectorOrDataOrHandler: any, dataOrHandler?: any, handlerOrUndefined?: any): import("../..").JBaseClass;
+    off(this: import("../..").JBaseClass, events: string, selectorOrHandler?: any, handlerOrUndefined?: any): import("../..").JBaseClass;
+    once(this: import("../..").JBaseClass, events: string, selectorOrDataOrHandler: any, dataOrHandler?: any, handlerOrUndefined?: any): import("../..").JBaseClass;
+    trigger(this: import("../..").JBaseClass, eventName: string, data?: any): import("../..").JBaseClass;
 };
 //# sourceMappingURL=index.d.ts.map

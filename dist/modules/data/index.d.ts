@@ -1,6 +1,6 @@
 /**
  * @file src/modules/data/index.ts
- * @version 2.0.2
+ * @version 2.0.3
  * @since 2.0.0
  * * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026

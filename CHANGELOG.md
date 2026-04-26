@@ -89,3 +89,8 @@ All notable changes to this project will be documented in this file.
 * **Event Delegation (`events/binding.ts`):** Fixed a potential `TypeError` crash during event delegation when a user clicks on a pure `TextNode` (which lacks the `.closest()` method).
 * **Typings (`index.ts`):** Fixed signature mismatch for `.prop()` to correctly handle getter (`any`) and setter (`jBase`) overloads.
 * **Dependencies (`package.json`):** Moved `jsdom` and `tslib` from standard `dependencies` to `peerDependencies` / `devDependencies`. This drastically reduces the installation size for browser-only users via npm.
+
+## [2.3.0] - 2026-04-20
+
+### 🚀 Added (Upload Method)
+* **HTTP Module:** Added `$.http.upload()` method. This introduces a modern, Promise-based wrapper around `XMLHttpRequest` specifically designed for file uploads. It solves the native limitation of the `fetch` API by allowing real-time upload progress tracking via an `onProgress` callback, while maintaining the same elegant `async/await` syntax as the rest of the HTTP module.

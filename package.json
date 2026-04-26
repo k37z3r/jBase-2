@@ -1,6 +1,6 @@
 {
     "name": "@k37z3r/jbase",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "description": "A modern micro-framework for the web: jBase offers the familiar syntax of classic DOM libraries, but without their baggage. Fully typed, modular, and optimized for modern browser engines.",
     "private": false,
     "main": "./dist/index.cjs",

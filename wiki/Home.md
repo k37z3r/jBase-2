@@ -1,6 +1,6 @@
 # Welcome to the jBase Documentation
 
-![Version](https://img.shields.io/badge/version-2.1.1-blue.svg?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.3.0-blue.svg?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green.svg?style=flat-square)
 ![Lightweight](https://img.shields.io/badge/size-lightweight-orange.svg?style=flat-square)
 
@@ -40,8 +40,8 @@ Manage your interface with powerful traversal and manipulation tools.
 Bring your application to life with events and animations.
 
 * **Event Handling**
-    * **Bindings:** `on`, `off`, `trigger`
-    * **Mouse/Touch:** `click`, `swipe`, `hover`...
+    * **Bindings:** `on`, `off`, `once`
+    * **Mouse/Touch:** `click`, `touchmove`, `mousemove`...
     * **Keyboard:** `keydown`, `pressedkey`...
     * **Forms:** `submit`, `change`, `input`...
 * **Effects & Animations**
@@ -65,6 +65,8 @@ Advanced helpers for complex data structures (Immutable & Type-Safe).
     * **Manage:** `mergeObjects`, `pick`, `omit`
     * **Deep Access:** `get` (dot-notation), `set`
     * **Search:** `find.key`, `find.value`, `find.first`...
+* **General Utilities**
+    * `$.each`, `$.throttle`, `$.debounce`
 
 ---
 

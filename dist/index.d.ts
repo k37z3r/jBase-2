@@ -947,6 +947,7 @@ export declare const bind: (window: Window) => (selector: JBaseInput) => JBaseCl
  */
 export declare const $: ((selector: JBaseInput) => JBaseClass) & {
     http: {
+        upload<T>(url: string, data: FormData | File, onProgress?: (percentage: number, loaded: number, total: number) => void): Promise<T>;
         post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
         get<T>(url: string, option?: RequestInit): Promise<T>;
         getText<T = string>(url: string, option?: RequestInit): Promise<T>;
@@ -962,6 +963,7 @@ export declare const $: ((selector: JBaseInput) => JBaseClass) & {
 };
 export declare const jB: ((selector: JBaseInput) => JBaseClass) & {
     http: {
+        upload<T>(url: string, data: FormData | File, onProgress?: (percentage: number, loaded: number, total: number) => void): Promise<T>;
         post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
         get<T>(url: string, option?: RequestInit): Promise<T>;
         getText<T = string>(url: string, option?: RequestInit): Promise<T>;
@@ -977,6 +979,7 @@ export declare const jB: ((selector: JBaseInput) => JBaseClass) & {
 };
 export declare const _jB: ((selector: JBaseInput) => JBaseClass) & {
     http: {
+        upload<T>(url: string, data: FormData | File, onProgress?: (percentage: number, loaded: number, total: number) => void): Promise<T>;
         post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
         get<T>(url: string, option?: RequestInit): Promise<T>;
         getText<T = string>(url: string, option?: RequestInit): Promise<T>;
@@ -992,6 +995,7 @@ export declare const _jB: ((selector: JBaseInput) => JBaseClass) & {
 };
 export declare const __jB: ((selector: JBaseInput) => JBaseClass) & {
     http: {
+        upload<T>(url: string, data: FormData | File, onProgress?: (percentage: number, loaded: number, total: number) => void): Promise<T>;
         post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
         get<T>(url: string, option?: RequestInit): Promise<T>;
         getText<T = string>(url: string, option?: RequestInit): Promise<T>;
@@ -1007,6 +1011,7 @@ export declare const __jB: ((selector: JBaseInput) => JBaseClass) & {
 };
 export declare const _jBase: ((selector: JBaseInput) => JBaseClass) & {
     http: {
+        upload<T>(url: string, data: FormData | File, onProgress?: (percentage: number, loaded: number, total: number) => void): Promise<T>;
         post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
         get<T>(url: string, option?: RequestInit): Promise<T>;
         getText<T = string>(url: string, option?: RequestInit): Promise<T>;
@@ -1022,6 +1027,7 @@ export declare const _jBase: ((selector: JBaseInput) => JBaseClass) & {
 };
 export declare const __jBase: ((selector: JBaseInput) => JBaseClass) & {
     http: {
+        upload<T>(url: string, data: FormData | File, onProgress?: (percentage: number, loaded: number, total: number) => void): Promise<T>;
         post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
         get<T>(url: string, option?: RequestInit): Promise<T>;
         getText<T = string>(url: string, option?: RequestInit): Promise<T>;
@@ -1037,6 +1043,7 @@ export declare const __jBase: ((selector: JBaseInput) => JBaseClass) & {
 };
 export declare const jBase: ((selector: JBaseInput) => JBaseClass) & {
     http: {
+        upload<T>(url: string, data: FormData | File, onProgress?: (percentage: number, loaded: number, total: number) => void): Promise<T>;
         post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
         get<T>(url: string, option?: RequestInit): Promise<T>;
         getText<T = string>(url: string, option?: RequestInit): Promise<T>;
@@ -1052,6 +1059,7 @@ export declare const jBase: ((selector: JBaseInput) => JBaseClass) & {
 };
 export declare const __: ((selector: JBaseInput) => JBaseClass) & {
     http: {
+        upload<T>(url: string, data: FormData | File, onProgress?: (percentage: number, loaded: number, total: number) => void): Promise<T>;
         post<T>(url: string, body?: any, option?: RequestInit): Promise<T>;
         get<T>(url: string, option?: RequestInit): Promise<T>;
         getText<T = string>(url: string, option?: RequestInit): Promise<T>;

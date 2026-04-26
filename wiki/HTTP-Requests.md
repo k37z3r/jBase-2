@@ -1,4 +1,4 @@
-* [`get`](#usage-http-get) | [`getText`](#usage-http-getText) | [`post`](#usage-http-post)
+* [`get`](#usage-http-get) | [`getText`](#usage-http-getText) | [`post`](#usage-http-post) | [`upload`](#usage-http-upload)
 
 ---
 
@@ -87,4 +87,41 @@ $.http.post('/api/register', payload)
     .catch(err => {
         console.error('Registration failed:', err);
     });
+```
+
+---
+
+## <a id="usage-http-upload"></a>upload
+
+**Description**
+The native `fetch` API currently lacks the ability to track upload progress. To solve this, jBase provides `$.http.upload()`. This method acts as a modern, Promise-based wrapper around `XMLHttpRequest`. It gives you the elegant, asynchronous chaining you expect from `fetch`, but includes full real-time progress tracking for multipart/form-data uploads.
+
+**Parameters**
+* `url` (String): The target API endpoint.
+* `data` (File | FormData): The payload to upload. If a single `File` object is provided, jBase automatically wraps it into a `FormData` object under the key `'file'`.
+* `onProgress` (Function, optional): A callback function triggered during the upload. Receives three arguments: `percentage` (0-100), `loaded` (bytes transferred), and `total` (total bytes).
+
+**Returns**
+* (Promise): Resolves to the parsed JSON response from the server (or text if parsing fails).
+
+**Example**
+```javascript
+// Grab a file from an input field
+const file = $('#file-input').prop('files')[0];
+
+if (file) {
+    try {
+        // Upload with real-time progress tracking
+        const response = await $.http.upload('/api/media/upload', file, (pct, loaded, total) => {
+            console.log(`Uploading: ${pct}%`);
+            
+            // Update a custom progress bar using jBase CSS chaining
+            $('.upload-progress-bar').css('width', pct + '%');
+        });
+
+        console.log('Upload successful!', response);
+    } catch (error) {
+        console.error('Upload failed:', error.message);
+    }
+}
 ```

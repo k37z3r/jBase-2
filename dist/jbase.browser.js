@@ -2063,6 +2063,65 @@
     }
   });
 
+  // src/modules/http/upload.ts
+  var upload_exports = {};
+  __export(upload_exports, {
+    upload: () => upload
+  });
+  async function upload(url, data2, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url);
+      if (onProgress) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentage = Math.round(event.loaded / event.total * 100);
+            onProgress(percentage, event.loaded, event.total);
+          }
+        };
+      }
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const text2 = xhr.responseText;
+          try {
+            resolve(text2 ? JSON.parse(text2) : {});
+          } catch (e) {
+            resolve(text2);
+          }
+        } else {
+          reject(new Error(`HTTP Error: ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => {
+        reject(new Error("Network Error during upload"));
+      };
+      let payload;
+      if (data2 instanceof File) {
+        payload = new FormData();
+        payload.append("file", data2);
+      } else {
+        payload = data2;
+      }
+      xhr.send(payload);
+    });
+  }
+  var init_upload = __esm({
+    "src/modules/http/upload.ts"() {
+      "use strict";
+      /**
+       * @file src/modules/http/upload.ts
+       * @version 2.0.0
+       * @since 2.3.0
+       * @license GPL-3.0-or-later
+       * @copyright Sven Minio 2026
+       * @author Sven Minio <https://sven-minio.de>
+       * @category HTTP
+       * * @description
+       * * Abstraction for HTTP POST requests.
+       */
+    }
+  });
+
   // src/modules/http/index.ts
   var http;
   var init_http = __esm({
@@ -2070,9 +2129,10 @@
       "use strict";
       init_get();
       init_post();
+      init_upload();
       /**
        * @file src/modules/http/index.ts
-       * @version 2.0.2
+       * @version 2.1.0
        * @since 2.0.0
        * @license GPL-3.0-or-later
        * @copyright Sven Minio 2026
@@ -2084,10 +2144,13 @@
        * * HTTP GET methods (get, getText).
        * @requires ./post
        * * HTTP POST methods.
+       * @requires ./upload
+       * * HTTP file upload method with progress tracking.
        */
       http = {
         ...get_exports,
-        ...post_exports
+        ...post_exports,
+        ...upload_exports
       };
     }
   });

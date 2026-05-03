@@ -1,6 +1,6 @@
 /**
  * @file src/modules/data/objects.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -16,6 +16,17 @@
 
 import { each } from 'src/utils';
 import { MatchMode } from './types';
+
+/**
+ * * Checks if the provided value is a plain object (not null, not an array).
+ * * Acts as a TypeScript Type Guard.
+ * @private
+ * @param item The value to check.
+ * @returns True if the value is a plain object.
+ */
+function isObject(item: any): item is Record<string, any> {
+    return (item && typeof item === 'object' && !Array.isArray(item));
+}
 
 /**
  * * Recursively merges multiple objects (Deep Merge).
@@ -43,6 +54,61 @@ export function mergeObjects(target: any, ...sources: any[]): any {
     }
     return mergeObjects(target, ...sources);
 }
+
+/**
+ * * ALIAS for mergeObjects (Consistency with array.mergeArray)
+ */
+export const merge = mergeObjects;
+
+/**
+ * * Splits an object into an array of smaller objects (chunks). Ideal for batched processing.
+ * @example chunk({a: 1, b: 2, c: 3}, 2) => [{a: 1, b: 2}, {c: 3}]
+ * @param obj The source object.
+ * @param size The maximum number of keys per chunk.
+ * @returns An array of partial objects.
+ */
+export function chunk<T extends Record<string, any>>(obj: T, size: number): Partial<T>[] {
+    const entries = Object.entries(obj);
+    const chunks: Partial<T>[] = [];
+    for (let i = 0; i < entries.length; i += size) {
+        const slice = entries.slice(i, i + size);
+        chunks.push(Object.fromEntries(slice) as Partial<T>);
+    }
+    return chunks;
+}
+
+/**
+ * * Safely adds a key-value pair at a specific index without mutating the original object (Immutable).
+ * * Note: While JS object key order is generally insertion-based, relying on it is not always recommended.
+ * @example add({a: 1, c: 3}, 'b', 2, 1) => {a: 1, b: 2, c: 3}
+ * @param obj The object.
+ * @param key The key to add.
+ * @param value The value to add.
+ * @param index The position (default: end). Negative values count from the back.
+ * @returns A new object including the element at the specified position.
+ */
+export function add<T extends Record<string, any>>(obj: T, key: string, value: any, index: number = Object.keys(obj).length): T & Record<string, any> {
+    const entries = Object.entries(obj);
+    const idx = index < 0 ? entries.length + index + 1 : index;
+    entries.splice(idx, 0, [key, value]);
+    return Object.fromEntries(entries) as T & Record<string, any>;
+}
+
+/**
+ * * Clears the object and returns a new empty object (Immutable).
+ * @example clear({ a: 1, b: 2 }) => {}
+ * @template T The type of the object.
+ * @param obj The object to clear.
+ * @returns A new empty object.
+ */
+export function clear<T extends Record<string, any>>(obj: T): Partial<T> {
+    return {} as Partial<T>;
+}
+
+/**
+ * * ALIAS for clear.
+ */
+export const empty = clear;
 
 /**
  * * Creates a new object containing only the specified keys (Allowlist).
@@ -104,6 +170,107 @@ export function set(obj: any, path: string, value: any): void {
 }
 
 /**
+ * * Removes elements from an object based on index or match logic (Immutable).
+ * * Mirrors the array.remove API.
+ */
+export const remove = {
+    /**
+     * * Removes an entry at a specific index.
+     * @example remove.at({a: 1, b: 2, c: 3}, -1) => {a: 1, b: 2}
+     * @param obj The source object.
+     * @param index The index (negative values allowed).
+     * @returns A new object with the element removed.
+     */
+    at<T extends Record<string, any>>(obj: T, index: number): Partial<T> {
+        const entries = Object.entries(obj);
+        const idx = index < 0 ? entries.length + index : index;
+        if (idx >= 0 && idx < entries.length) {
+            entries.splice(idx, 1);
+        }
+        return Object.fromEntries(entries) as Partial<T>;
+    },
+
+    /**
+     * * Removes the first entry from the object.
+     * @param obj The source object.
+     * @returns A new object without the first entry.
+     */
+    first<T extends Record<string, any>>(obj: T): Partial<T> {
+        const entries = Object.entries(obj).slice(1);
+        return Object.fromEntries(entries) as Partial<T>;
+    },
+
+    /**
+     * * Removes the last entry from the object.
+     * @param obj The source object.
+     * @returns A new object without the last entry.
+     */
+    last<T extends Record<string, any>>(obj: T): Partial<T> {
+        const entries = Object.entries(obj).slice(0, -1);
+        return Object.fromEntries(entries) as Partial<T>;
+    },
+
+    /**
+     * * Removes all entries matching a query condition.
+     * @example remove.byMatch(config, 'hidden', 'exact', 'key')
+     * @param obj The source object.
+     * @param query The search query.
+     * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+     * @param searchBy Whether to search by 'key' or 'value' (default: 'key').
+     * @returns A new object without the matching elements.
+     */
+    byMatch<T extends Record<string, any>>(obj: T, query: string | number, mode: MatchMode = 'exact', searchBy: 'key' | 'value' = 'key'): Partial<T> {
+        const queryStr = String(query).toLowerCase();
+        const filteredEntries = Object.entries(obj).filter(([key, val]) => {
+            const target = searchBy === 'key' ? key : val;
+            const valStr = String(target).toLowerCase();
+            switch (mode) {
+                case 'exact': return valStr !== queryStr;
+                case 'startsWith': return !valStr.startsWith(queryStr);
+                case 'endsWith': return !valStr.endsWith(queryStr);
+                case 'contains': return !valStr.includes(queryStr);
+                default: return true;
+            }
+        });
+        return Object.fromEntries(filteredEntries) as Partial<T>;
+    },
+
+    /**
+     * * Removes all entries that have a specific key.
+     * @example remove.byKey({ a: 1, b: 2, c: 3 }, 'b') => { a: 1, c: 3 }
+     * @param obj The source object.
+     * @param key The key to remove.
+     * @returns A new object without the specified key.
+     */
+    byKey<T extends Record<string, any>>(obj: T, key: string): Partial<T> {
+        const ret = { ...obj };
+        delete ret[key];
+        return ret as Partial<T>;
+    },
+
+    /**
+     * * Removes all entries that match a specific value exactly (Strict Equality).
+     * @example remove.byValue({ a: 1, b: 2, c: 1 }, 1) => { b: 2 }
+     * @param obj The source object.
+     * @param value The value to remove.
+     * @returns A new object without the matching values.
+     */
+    byValue<T extends Record<string, any>>(obj: T, value: any): Partial<T> {
+        const filteredEntries = Object.entries(obj).filter(([_key, val]) => val !== value);
+        return Object.fromEntries(filteredEntries) as Partial<T>;
+    },
+
+    /**
+     * * ALIAS for clear. Removes all entries.
+     * @param obj The source object.
+     * @returns A new, empty object.
+     */
+    all<T extends Record<string, any>>(obj: T): Partial<T> {
+        return clear(obj);
+    },
+};
+
+/**
  * * Searches keys or values in the object.
  */
 export const find = {
@@ -118,6 +285,32 @@ export const find = {
         const entries = Object.entries(obj);
         const idx = index < 0 ? entries.length + index : index;
         return entries[idx];
+    },
+
+    /**
+     * * Returns a NEW OBJECT containing ALL elements matching the condition.
+     * * Mirrors array.find.all() but returns a partial object.
+     * @example find.all({a: 1, b: 2, c: 1}, 1, 'exact', 'value') => {a: 1, c: 1}
+     * @param obj The object to search.
+     * @param query The search query.
+     * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+     * @param searchBy Whether to search by 'key' or 'value' (default: 'key').
+     * @returns A new object with only the matching elements.
+     */
+    all<T extends Record<string, any>>(obj: T, query: string | number, mode: MatchMode = 'exact', searchBy: 'key' | 'value' = 'key'): Partial<T> {
+        const queryStr = String(query).toLowerCase();
+        const filteredEntries = Object.entries(obj).filter(([key, val]) => {
+            const target = searchBy === 'key' ? key : val;
+            const valStr = String(target).toLowerCase();
+            switch (mode) {
+                case 'exact': return valStr === queryStr;
+                case 'startsWith': return valStr.startsWith(queryStr);
+                case 'endsWith': return valStr.endsWith(queryStr);
+                case 'contains': return valStr.includes(queryStr);
+                default: return false;
+            }
+        });
+        return Object.fromEntries(filteredEntries) as Partial<T>;
     },
 
     /**
@@ -218,16 +411,35 @@ export const find = {
                 default: return false;
             }
         });
+    },
+
+    /**
+     * * Finds the key of the first match based on the query condition.
+     * * Mirrors array.find.byMatch(). For objects, it returns the key instead of a numeric index.
+     * @example find.byMatch(config, 'admin', 'exact', 'value') => 'role'
+     * @param obj The object to search.
+     * @param query The search query.
+     * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+     * @param searchBy Whether to search by 'key' or 'value' (default: 'key').
+     * @returns The matched key as a string, or undefined if no match is found.
+     */
+    byMatch(obj: any, query: string | number, mode: MatchMode = 'exact', searchBy: 'key' | 'value' = 'key'): string | undefined {
+        const queryStr = String(query).toLowerCase();
+        const entries = Object.entries(obj);
+        
+        const found = entries.find(([key, val]) => {
+            const target = searchBy === 'key' ? key : val;
+            const valStr = String(target).toLowerCase();
+            
+            switch (mode) {
+                case 'exact': return valStr === queryStr;
+                case 'startsWith': return valStr.startsWith(queryStr);
+                case 'endsWith': return valStr.endsWith(queryStr);
+                case 'contains': return valStr.includes(queryStr);
+                default: return false;
+            }
+        });
+        
+        return found ? found[0] : undefined;
     }
 };
-
-/**
- * * Checks if the provided value is a plain object (not null, not an array).
- * * Acts as a TypeScript Type Guard.
- * @private
- * @param item The value to check.
- * @returns True if the value is a plain object.
- */
-function isObject(item: any): item is Record<string, any> {
-    return (item && typeof item === 'object' && !Array.isArray(item));
-}

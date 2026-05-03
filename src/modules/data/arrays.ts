@@ -1,6 +1,6 @@
 /**
  * @file src/modules/data/arrays.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -42,6 +42,11 @@ export function mergeArray<T>(...arrays: T[][]): T[] {
 }
 
 /**
+ * * ALIAS for mergeArray (Consistency with object.merge)
+ */
+export const merge = mergeArray;
+
+/**
  * * Safely adds an element at a specific position without mutating the original array (Immutable).
  * @example add([1, 2, 4], 3, 2) => [1, 2, 3, 4]
  * @template T The type of the items in the array.
@@ -55,6 +60,81 @@ export function add<T>(array: T[], item: T, index: number = array.length): T[] {
     const idx = index < 0 ? array.length + index + 1 : index;
     copy.splice(idx, 0, item);
     return copy;
+}
+
+/**
+ * * Clears the array and returns a new empty array (Immutable).
+ * @example clear([1, 2, 3]) => []
+ * @template T The type of the items in the array.
+ * @param array The array to clear.
+ * @returns A new empty array.
+ */
+export function clear<T>(array: T[]): T[] {
+    return [];
+}
+
+/**
+ * * ALIAS for clear.
+ */
+export const empty = clear;
+
+/**
+ * * Creates a new array containing only the elements at the specified indices (Allowlist).
+ * * Mirrors object.pick.
+ * @example pick(['a', 'b', 'c', 'd'], [0, 2]) => ['a', 'c']
+ * @template T The type of the items in the array.
+ * @param array The source array.
+ * @param indices Array of indices to keep.
+ * @returns A new array with selected elements.
+ */
+export function pick<T>(array: T[], indices: number[]): T[] {
+    return array.filter((_, index) => indices.includes(index));
+}
+
+/**
+ * * Creates a new array containing all elements EXCEPT those at the specified indices (Blocklist).
+ * * Mirrors object.omit.
+ * @example omit(['a', 'b', 'c', 'd'], [1, 3]) => ['a', 'c']
+ * @template T The type of the items in the array.
+ * @param array The source array.
+ * @param indices Array of indices to remove.
+ * @returns A new array without the specified elements.
+ */
+export function omit<T>(array: T[], indices: number[]): T[] {
+    return array.filter((_, index) => !indices.includes(index));
+}
+
+/**
+ * * Safely retrieves a value from a nested array/object structure (Safe Navigation).
+ * * Mirrors object.get.
+ * @example get(users, '0.profile.name') => Returns the name of the first user.
+ * @param array The array.
+ * @param path The path as a dot-notation string.
+ * @returns The found value or undefined.
+ */
+export function get(array: any[], path: string): any {
+    return path.split('.').reduce((acc, part) => acc && acc[part as keyof typeof acc], array);
+}
+
+/**
+ * * Sets a value deeply within a nested array/object structure.
+ * * Mirrors object.set.
+ * @example set(users, '0.profile.name', 'Sven')
+ * @param array The array to modify.
+ * @param path The path as a string (e.g., '0.profile.name').
+ * @param value The value to set.
+ */
+export function set(array: any[], path: string, value: any): void {
+    const parts = path.split('.');
+    let current: any = array;
+    for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (!current[part]) {
+            current[part] = isNaN(Number(parts[i + 1])) ? {} : [];
+        }
+        current = current[part];
+    }
+    current[parts[parts.length - 1]] = value;
 }
 
 /**
@@ -116,7 +196,42 @@ export const remove = {
                 default: return false;
             }
         });
-    }
+    },
+
+    /**
+     * * Removes the element at a specific index.
+     * * Mirrors object.remove.byKey.
+     * @example remove.byKey(['a', 'b', 'c'], 1) => ['a', 'c']
+     * @template T The type of the items in the array.
+     * @param array The source array.
+     * @param index The index (key) to remove.
+     * @returns A new array without the specified index.
+     */
+    byKey<T>(array: T[], index: number): T[] {
+        return this.at(array, index);
+    },
+
+    /**
+     * * Removes all elements that match a specific value exactly (Strict Equality).
+     * * Mirrors object.remove.byValue.
+     * @example remove.byValue([1, 2, 1, 3], 1) => [2, 3]
+     * @template T The type of the items in the array.
+     * @param array The source array.
+     * @param value The value to remove.
+     * @returns A new array without the matching values.
+     */
+    byValue<T>(array: T[], value: T): T[] {
+        return array.filter(item => item !== value);
+    },
+
+    /**
+     * * ALIAS for clear. Removes all elements.
+     * @param array The source array.
+     * @returns A new, empty array.
+     */
+    all<T>(array: T[]): T[] {
+        return clear(array);
+    },
 };
 
 /**
@@ -224,7 +339,41 @@ export const find = {
     },
 
     /**
-     * * Removes all elements matching a query condition.
+     * * Finds all indices (keys) matching the query.
+     * * Mirrors object.find.key(). For arrays, keys are the indices.
+     * @param array The array to search.
+     * @param query The search query.
+     * @param mode The comparison mode.
+     * @returns An array of matching indices as strings.
+     */
+    key<T>(array: T[], query: string, mode: MatchMode = 'exact'): string[] {
+        const queryStr = String(query).toLowerCase();
+        return Object.keys(array).filter(indexKey => {
+            const valStr = String(indexKey).toLowerCase();
+            switch (mode) {
+                case 'exact': return valStr === queryStr;
+                case 'startsWith': return valStr.startsWith(queryStr);
+                case 'endsWith': return valStr.endsWith(queryStr);
+                case 'contains': return valStr.includes(queryStr);
+                default: return false;
+            }
+        });
+    },
+
+    /**
+     * * Finds all values matching the query.
+     * * Mirrors object.find.value(). Identical to find.all() for flat arrays.
+     * @param array The array to search.
+     * @param query The search query.
+     * @param mode The comparison mode.
+     * @returns An array of matching values.
+     */
+    value<T>(array: T[], query: string, mode: MatchMode = 'exact'): T[] {
+        return this.all(array, query, mode);
+    },
+
+    /**
+     * * Finds the key of the first match based on the query condition.
      * @example find.byMatch(users, 'Admin', 'exact', 'role') => 0
      * @template T The type of the items in the array.
      * @param array The array.

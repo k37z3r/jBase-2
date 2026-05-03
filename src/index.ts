@@ -1,6 +1,6 @@
 /**
  * @file src/index.ts
- * @version 2.2.0
+ * @version 2.3.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -496,13 +496,17 @@ declare module './core' {
          * @returns The HTML content as a string.
          */
         html(): string;
+        
         /**
-         * * Sets the HTML content of all selected elements.
-         * @example html('<p>New content</p>') => Sets the HTML content of all matched elements to '<p>New content</p>'.
-         * @param content The new HTML content.
-         * @returns The current jBase instance.
+         * * Gets the HTML content of the first element, or sets the HTML content of all matched elements.
+         * @example html() => Returns the innerHTML of the first element.
+         * @example html('<div>New</div>') => Sets safe HTML for all matched elements.
+         * @example html('<script>alert("Hi")</script>', { executeScripts: true }) => Injects and executes scripts.
+         * @param content The HTML string to set. If undefined, acts as a getter.
+         * @param options Security and execution options.
+         * @returns HTML string (getter) or the current jBase instance (setter).
          */
-        html(content: string): jBase;
+        html(content: string, options?: { executeScripts?: boolean }): jBase;
 
         /**
          * * Gets the text content of the first element.
@@ -519,12 +523,23 @@ declare module './core' {
         text(content: string): jBase;
 
         /**
+         * * Loads HTML from a server and injects it into the matched elements.
+         * @example $('#content').load('/pages/about.html')
+         * @example $('#content').load('/pages/widget.html', { executeScripts: true })
+         * @param url The URL to fetch the HTML from.
+         * @param options Fetch options extended with jBase specific settings (e.g., executeScripts).
+         * @returns A Promise resolving to the current jBase instance.
+         */
+        load(url: string, options?: RequestInit & { executeScripts?: boolean }): Promise<jBase>;
+
+        /**
          * * Gets an attribute value from the first element.
          * @example attr('href') => Returns the value of the 'href' attribute from the first matched element or null if it doesn't exist.
          * @param name The name of the attribute.
          * @returns The attribute value or null.
          */
         attr(name: string): string | null;
+
         /**
          * * Sets an attribute for all selected elements.
          * @example attr('data-id', '123') => Sets the 'data-id' attribute to '123' for all matched elements.
@@ -540,6 +555,7 @@ declare module './core' {
          * @returns The value as a string.
          */
         val(): string;
+
         /**
          * * Sets the value for all selected form elements.
          * @example val('New value') => Sets the value of all matched form elements to 'New value'.
@@ -995,6 +1011,7 @@ declare module './core' {
          * @returns True if checked.
          */
         checked(): boolean;
+
         /**
          * * Sets the 'checked' state (Setter).
          * @example checked(true) => Sets the checked state to true for all matched checkboxes/radio buttons.
@@ -1002,6 +1019,20 @@ declare module './core' {
          * @returns The current jBase instance.
          */
         checked(state: boolean): jBase;
+
+        /**
+         * * ALIAS for .checked(true). Checks the matched elements.
+         * @example check() => Checks all matched checkboxes/radio buttons.
+         * @returns The current jBase instance.
+         */
+        check(): jBase;
+
+        /**
+         * * ALIAS for .checked(false). Unchecks the matched elements.
+         * @example uncheck() => Unchecks all matched checkboxes/radio buttons.
+         * @returns The current jBase instance.
+         */
+        uncheck(): jBase;
 
         /**
          * * Checks the 'selected' state (Getter).
@@ -1019,12 +1050,19 @@ declare module './core' {
         selected(state: boolean): jBase;
 
         /**
+         * * ALIAS for .selected(true). Selects the matched <option> elements.
+         * @example select() => Selects all matched option elements.
+         * @returns The current jBase instance.
+         */
+        select(): jBase;
+
+        /**
          * * Checks the 'disabled' state (Getter).
          * @example disabled() => Returns true if the first matched element is disabled (for form elements).
          * @returns True if disabled.
          */
-
         disabled(): boolean;
+
         /**
          * * Sets the 'disabled' state and toggles CSS class (Setter).
          * @example disabled(true) => Sets the disabled state to true for all matched form elements and adds a 'disabled' CSS class.
@@ -1033,6 +1071,20 @@ declare module './core' {
          * @returns The current jBase instance.
          */
         disabled(state: boolean): jBase;
+
+        /**
+         * * ALIAS for .disabled(true). Disables the matched elements and adds the 'disabled' class.
+         * @example disable() => Disables all matched elements.
+         * @returns The current jBase instance.
+         */
+        disable(): jBase;
+
+        /**
+         * * ALIAS for .disabled(false). Enables the matched elements and removes the 'disabled' class.
+         * @example enable() => Enables all matched elements.
+         * @returns The current jBase instance.
+         */
+        enable(): jBase;
     }
 }
 

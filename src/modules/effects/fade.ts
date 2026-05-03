@@ -1,6 +1,6 @@
 /**
  * @file src/modules/effects/fade.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -99,3 +99,18 @@ export function fadeToggle(this: jBase, options: FadeOptions = {}): jBase {
     });
     return this;
 }
+
+/**
+ * * ALIAS for fadeIn.
+ */
+export const show = fadeIn;
+
+/**
+ * * ALIAS for fadeOut.
+ */
+export const hide = fadeOut;
+
+/**
+ * * ALIAS for fadeToggle.
+ */
+export const toggle = fadeToggle;

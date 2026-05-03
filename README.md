@@ -30,9 +30,9 @@ npm install @k37z3r/jbase
 yarn add @k37z3r/jbase
 ```
 
-### via Script Tag (CDN)
+### via Script Tag
 
-Simply download the minified file and include it in your HTML.
+Download the [jbase.min.js](/k37z3r/jBase-2/releases/latest/download/jbase.min.js) file, upload it to your server, and include it in your HTML.
 
 ```html
 <script src="dist/jbase.min.js"></script>
@@ -40,7 +40,7 @@ Simply download the minified file and include it in your HTML.
 
 -- OR --
 
-via CDN
+### via CDN
 ```html
 <!-- CDN: jsDelivr @latest Version -->
 <script src="https://cdn.jsdelivr.net/npm/@k37z3r/jbase/dist/jbase.min.js"></script>

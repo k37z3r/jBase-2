@@ -14,7 +14,7 @@ Download the [jbase.min.js](/k37z3r/jBase-2/releases/latest/download/jbase.min.j
 
 -- OR --
 
-via CDN
+**via CDN**
 ```html
 <!-- CDN: jsDelivr @latest Version -->
 <script src="https://cdn.jsdelivr.net/npm/@k37z3r/jbase/dist/jbase.min.js"></script>

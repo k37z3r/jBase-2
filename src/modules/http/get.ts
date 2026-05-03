@@ -1,6 +1,6 @@
 /**
  * @file src/modules/http/get.ts
- * @version 2.0.5
+ * @version 2.0.6
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -35,7 +35,11 @@ export async function get<T>(url: string, option?: RequestInit): Promise<T> {
         throw new Error(`HTTP Error: ${response.status}`);
     }
     const text = await response.text();
-    return text ? JSON.parse(text) : {} as T;
+    try {
+        return text ? JSON.parse(text) : {} as T;
+    } catch (e) {
+        return text as unknown as T; 
+    }
 }
 
 /**

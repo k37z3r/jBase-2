@@ -1,6 +1,6 @@
 /**
  * @file src/modules/http/get.ts
- * @version 2.0.5
+ * @version 2.0.6
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026

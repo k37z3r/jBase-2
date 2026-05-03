@@ -1,6 +1,6 @@
 /**
  * @file src/modules/http/post.ts
- * @version 2.0.4
+ * @version 2.0.5
  * @since 2.0.2
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026

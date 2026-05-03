@@ -1,6 +1,6 @@
 /**
  * @file src/index.ts
- * @version 2.2.0
+ * @version 2.3.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -433,12 +433,17 @@ declare module './core' {
          */
         html(): string;
         /**
-         * * Sets the HTML content of all selected elements.
-         * @example html('<p>New content</p>') => Sets the HTML content of all matched elements to '<p>New content</p>'.
-         * @param content The new HTML content.
-         * @returns The current jBase instance.
+         * * Gets the HTML content of the first element, or sets the HTML content of all matched elements.
+         * @example html() => Returns the innerHTML of the first element.
+         * @example html('<div>New</div>') => Sets safe HTML for all matched elements.
+         * @example html('<script>alert("Hi")</script>', { executeScripts: true }) => Injects and executes scripts.
+         * @param content The HTML string to set. If undefined, acts as a getter.
+         * @param options Security and execution options.
+         * @returns HTML string (getter) or the current jBase instance (setter).
          */
-        html(content: string): jBase;
+        html(content: string, options?: {
+            executeScripts?: boolean;
+        }): jBase;
         /**
          * * Gets the text content of the first element.
          * @example text() => Returns the text content of the first matched element as a string.
@@ -452,6 +457,17 @@ declare module './core' {
          * @returns The current jBase instance.
          */
         text(content: string): jBase;
+        /**
+         * * Loads HTML from a server and injects it into the matched elements.
+         * @example $('#content').load('/pages/about.html')
+         * @example $('#content').load('/pages/widget.html', { executeScripts: true })
+         * @param url The URL to fetch the HTML from.
+         * @param options Fetch options extended with jBase specific settings (e.g., executeScripts).
+         * @returns A Promise resolving to the current jBase instance.
+         */
+        load(url: string, options?: RequestInit & {
+            executeScripts?: boolean;
+        }): Promise<jBase>;
         /**
          * * Gets an attribute value from the first element.
          * @example attr('href') => Returns the value of the 'href' attribute from the first matched element or null if it doesn't exist.
@@ -906,6 +922,18 @@ declare module './core' {
          */
         checked(state: boolean): jBase;
         /**
+         * * ALIAS for .checked(true). Checks the matched elements.
+         * @example check() => Checks all matched checkboxes/radio buttons.
+         * @returns The current jBase instance.
+         */
+        check(): jBase;
+        /**
+         * * ALIAS for .checked(false). Unchecks the matched elements.
+         * @example uncheck() => Unchecks all matched checkboxes/radio buttons.
+         * @returns The current jBase instance.
+         */
+        uncheck(): jBase;
+        /**
          * * Checks the 'selected' state (Getter).
          * @example selected() => Returns true if the first matched element is selected (for options in a select element).
          * @returns True if selected.
@@ -918,6 +946,12 @@ declare module './core' {
          * @returns The current jBase instance.
          */
         selected(state: boolean): jBase;
+        /**
+         * * ALIAS for .selected(true). Selects the matched <option> elements.
+         * @example select() => Selects all matched option elements.
+         * @returns The current jBase instance.
+         */
+        select(): jBase;
         /**
          * * Checks the 'disabled' state (Getter).
          * @example disabled() => Returns true if the first matched element is disabled (for form elements).
@@ -932,6 +966,18 @@ declare module './core' {
          * @returns The current jBase instance.
          */
         disabled(state: boolean): jBase;
+        /**
+         * * ALIAS for .disabled(true). Disables the matched elements and adds the 'disabled' class.
+         * @example disable() => Disables all matched elements.
+         * @returns The current jBase instance.
+         */
+        disable(): jBase;
+        /**
+         * * ALIAS for .disabled(false). Enables the matched elements and removes the 'disabled' class.
+         * @example enable() => Enables all matched elements.
+         * @returns The current jBase instance.
+         */
+        enable(): jBase;
     }
 }
 /**
@@ -955,6 +1001,102 @@ export declare const $: ((selector: JBaseInput) => JBaseClass) & {
     data: {
         arr: typeof import("./modules/data/arrays");
         obj: typeof import("./modules/data/objects");
+        chunk: {
+            <T>(array: T[], size: number): T[][];
+            <T extends Record<string, any>>(object: T, size: number): Partial<T>[];
+        };
+        merge: {
+            (...arrays: any[][]): any[];
+            (target: any, ...sources: any[]): any;
+        };
+        add: {
+            <T>(array: T[], item: T, index?: number): T[];
+            <T extends Record<string, any>>(object: T, key: string, value: any, index?: number): T & Record<string, any>;
+        };
+        clear: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        empty: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        pick: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Pick<T, K>;
+        };
+        omit: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Omit<T, K>;
+        };
+        get: {
+            (array: any[], path: string): any;
+            (object: any, path: string): any;
+        };
+        set: {
+            (array: any[], path: string, value: any): void;
+            (object: any, path: string, value: any): void;
+        };
+        remove: {
+            at: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, index: number): Partial<T>;
+            };
+            first: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            last: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            byKey: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, key: string): Partial<T>;
+            };
+            byValue: {
+                <T>(array: T[], value: T): T[];
+                <T extends Record<string, any>>(object: T, value: any): Partial<T>;
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            all: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+        };
+        find: {
+            at: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number;
+                (object: any, index: number): [string, any] | undefined;
+            };
+            all: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            first: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            last: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            key: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): string[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): string[];
+            };
+            value: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): T[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): any[];
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): string | undefined;
+            };
+        };
     };
     each: typeof each;
     throttle: typeof throttle;
@@ -971,6 +1113,102 @@ export declare const jB: ((selector: JBaseInput) => JBaseClass) & {
     data: {
         arr: typeof import("./modules/data/arrays");
         obj: typeof import("./modules/data/objects");
+        chunk: {
+            <T>(array: T[], size: number): T[][];
+            <T extends Record<string, any>>(object: T, size: number): Partial<T>[];
+        };
+        merge: {
+            (...arrays: any[][]): any[];
+            (target: any, ...sources: any[]): any;
+        };
+        add: {
+            <T>(array: T[], item: T, index?: number): T[];
+            <T extends Record<string, any>>(object: T, key: string, value: any, index?: number): T & Record<string, any>;
+        };
+        clear: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        empty: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        pick: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Pick<T, K>;
+        };
+        omit: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Omit<T, K>;
+        };
+        get: {
+            (array: any[], path: string): any;
+            (object: any, path: string): any;
+        };
+        set: {
+            (array: any[], path: string, value: any): void;
+            (object: any, path: string, value: any): void;
+        };
+        remove: {
+            at: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, index: number): Partial<T>;
+            };
+            first: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            last: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            byKey: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, key: string): Partial<T>;
+            };
+            byValue: {
+                <T>(array: T[], value: T): T[];
+                <T extends Record<string, any>>(object: T, value: any): Partial<T>;
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            all: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+        };
+        find: {
+            at: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number;
+                (object: any, index: number): [string, any] | undefined;
+            };
+            all: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            first: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            last: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            key: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): string[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): string[];
+            };
+            value: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): T[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): any[];
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): string | undefined;
+            };
+        };
     };
     each: typeof each;
     throttle: typeof throttle;
@@ -987,6 +1225,102 @@ export declare const _jB: ((selector: JBaseInput) => JBaseClass) & {
     data: {
         arr: typeof import("./modules/data/arrays");
         obj: typeof import("./modules/data/objects");
+        chunk: {
+            <T>(array: T[], size: number): T[][];
+            <T extends Record<string, any>>(object: T, size: number): Partial<T>[];
+        };
+        merge: {
+            (...arrays: any[][]): any[];
+            (target: any, ...sources: any[]): any;
+        };
+        add: {
+            <T>(array: T[], item: T, index?: number): T[];
+            <T extends Record<string, any>>(object: T, key: string, value: any, index?: number): T & Record<string, any>;
+        };
+        clear: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        empty: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        pick: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Pick<T, K>;
+        };
+        omit: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Omit<T, K>;
+        };
+        get: {
+            (array: any[], path: string): any;
+            (object: any, path: string): any;
+        };
+        set: {
+            (array: any[], path: string, value: any): void;
+            (object: any, path: string, value: any): void;
+        };
+        remove: {
+            at: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, index: number): Partial<T>;
+            };
+            first: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            last: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            byKey: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, key: string): Partial<T>;
+            };
+            byValue: {
+                <T>(array: T[], value: T): T[];
+                <T extends Record<string, any>>(object: T, value: any): Partial<T>;
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            all: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+        };
+        find: {
+            at: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number;
+                (object: any, index: number): [string, any] | undefined;
+            };
+            all: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            first: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            last: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            key: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): string[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): string[];
+            };
+            value: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): T[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): any[];
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): string | undefined;
+            };
+        };
     };
     each: typeof each;
     throttle: typeof throttle;
@@ -1003,6 +1337,102 @@ export declare const __jB: ((selector: JBaseInput) => JBaseClass) & {
     data: {
         arr: typeof import("./modules/data/arrays");
         obj: typeof import("./modules/data/objects");
+        chunk: {
+            <T>(array: T[], size: number): T[][];
+            <T extends Record<string, any>>(object: T, size: number): Partial<T>[];
+        };
+        merge: {
+            (...arrays: any[][]): any[];
+            (target: any, ...sources: any[]): any;
+        };
+        add: {
+            <T>(array: T[], item: T, index?: number): T[];
+            <T extends Record<string, any>>(object: T, key: string, value: any, index?: number): T & Record<string, any>;
+        };
+        clear: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        empty: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        pick: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Pick<T, K>;
+        };
+        omit: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Omit<T, K>;
+        };
+        get: {
+            (array: any[], path: string): any;
+            (object: any, path: string): any;
+        };
+        set: {
+            (array: any[], path: string, value: any): void;
+            (object: any, path: string, value: any): void;
+        };
+        remove: {
+            at: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, index: number): Partial<T>;
+            };
+            first: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            last: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            byKey: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, key: string): Partial<T>;
+            };
+            byValue: {
+                <T>(array: T[], value: T): T[];
+                <T extends Record<string, any>>(object: T, value: any): Partial<T>;
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            all: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+        };
+        find: {
+            at: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number;
+                (object: any, index: number): [string, any] | undefined;
+            };
+            all: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            first: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            last: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            key: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): string[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): string[];
+            };
+            value: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): T[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): any[];
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): string | undefined;
+            };
+        };
     };
     each: typeof each;
     throttle: typeof throttle;
@@ -1019,6 +1449,102 @@ export declare const _jBase: ((selector: JBaseInput) => JBaseClass) & {
     data: {
         arr: typeof import("./modules/data/arrays");
         obj: typeof import("./modules/data/objects");
+        chunk: {
+            <T>(array: T[], size: number): T[][];
+            <T extends Record<string, any>>(object: T, size: number): Partial<T>[];
+        };
+        merge: {
+            (...arrays: any[][]): any[];
+            (target: any, ...sources: any[]): any;
+        };
+        add: {
+            <T>(array: T[], item: T, index?: number): T[];
+            <T extends Record<string, any>>(object: T, key: string, value: any, index?: number): T & Record<string, any>;
+        };
+        clear: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        empty: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        pick: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Pick<T, K>;
+        };
+        omit: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Omit<T, K>;
+        };
+        get: {
+            (array: any[], path: string): any;
+            (object: any, path: string): any;
+        };
+        set: {
+            (array: any[], path: string, value: any): void;
+            (object: any, path: string, value: any): void;
+        };
+        remove: {
+            at: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, index: number): Partial<T>;
+            };
+            first: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            last: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            byKey: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, key: string): Partial<T>;
+            };
+            byValue: {
+                <T>(array: T[], value: T): T[];
+                <T extends Record<string, any>>(object: T, value: any): Partial<T>;
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            all: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+        };
+        find: {
+            at: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number;
+                (object: any, index: number): [string, any] | undefined;
+            };
+            all: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            first: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            last: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            key: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): string[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): string[];
+            };
+            value: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): T[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): any[];
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): string | undefined;
+            };
+        };
     };
     each: typeof each;
     throttle: typeof throttle;
@@ -1035,6 +1561,102 @@ export declare const __jBase: ((selector: JBaseInput) => JBaseClass) & {
     data: {
         arr: typeof import("./modules/data/arrays");
         obj: typeof import("./modules/data/objects");
+        chunk: {
+            <T>(array: T[], size: number): T[][];
+            <T extends Record<string, any>>(object: T, size: number): Partial<T>[];
+        };
+        merge: {
+            (...arrays: any[][]): any[];
+            (target: any, ...sources: any[]): any;
+        };
+        add: {
+            <T>(array: T[], item: T, index?: number): T[];
+            <T extends Record<string, any>>(object: T, key: string, value: any, index?: number): T & Record<string, any>;
+        };
+        clear: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        empty: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        pick: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Pick<T, K>;
+        };
+        omit: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Omit<T, K>;
+        };
+        get: {
+            (array: any[], path: string): any;
+            (object: any, path: string): any;
+        };
+        set: {
+            (array: any[], path: string, value: any): void;
+            (object: any, path: string, value: any): void;
+        };
+        remove: {
+            at: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, index: number): Partial<T>;
+            };
+            first: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            last: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            byKey: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, key: string): Partial<T>;
+            };
+            byValue: {
+                <T>(array: T[], value: T): T[];
+                <T extends Record<string, any>>(object: T, value: any): Partial<T>;
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            all: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+        };
+        find: {
+            at: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number;
+                (object: any, index: number): [string, any] | undefined;
+            };
+            all: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            first: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            last: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            key: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): string[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): string[];
+            };
+            value: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): T[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): any[];
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): string | undefined;
+            };
+        };
     };
     each: typeof each;
     throttle: typeof throttle;
@@ -1051,6 +1673,102 @@ export declare const jBase: ((selector: JBaseInput) => JBaseClass) & {
     data: {
         arr: typeof import("./modules/data/arrays");
         obj: typeof import("./modules/data/objects");
+        chunk: {
+            <T>(array: T[], size: number): T[][];
+            <T extends Record<string, any>>(object: T, size: number): Partial<T>[];
+        };
+        merge: {
+            (...arrays: any[][]): any[];
+            (target: any, ...sources: any[]): any;
+        };
+        add: {
+            <T>(array: T[], item: T, index?: number): T[];
+            <T extends Record<string, any>>(object: T, key: string, value: any, index?: number): T & Record<string, any>;
+        };
+        clear: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        empty: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        pick: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Pick<T, K>;
+        };
+        omit: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Omit<T, K>;
+        };
+        get: {
+            (array: any[], path: string): any;
+            (object: any, path: string): any;
+        };
+        set: {
+            (array: any[], path: string, value: any): void;
+            (object: any, path: string, value: any): void;
+        };
+        remove: {
+            at: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, index: number): Partial<T>;
+            };
+            first: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            last: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            byKey: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, key: string): Partial<T>;
+            };
+            byValue: {
+                <T>(array: T[], value: T): T[];
+                <T extends Record<string, any>>(object: T, value: any): Partial<T>;
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            all: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+        };
+        find: {
+            at: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number;
+                (object: any, index: number): [string, any] | undefined;
+            };
+            all: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            first: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            last: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            key: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): string[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): string[];
+            };
+            value: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): T[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): any[];
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): string | undefined;
+            };
+        };
     };
     each: typeof each;
     throttle: typeof throttle;
@@ -1067,6 +1785,102 @@ export declare const __: ((selector: JBaseInput) => JBaseClass) & {
     data: {
         arr: typeof import("./modules/data/arrays");
         obj: typeof import("./modules/data/objects");
+        chunk: {
+            <T>(array: T[], size: number): T[][];
+            <T extends Record<string, any>>(object: T, size: number): Partial<T>[];
+        };
+        merge: {
+            (...arrays: any[][]): any[];
+            (target: any, ...sources: any[]): any;
+        };
+        add: {
+            <T>(array: T[], item: T, index?: number): T[];
+            <T extends Record<string, any>>(object: T, key: string, value: any, index?: number): T & Record<string, any>;
+        };
+        clear: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        empty: {
+            <T>(array: T[]): T[];
+            <T extends Record<string, any>>(object: T): Partial<T>;
+        };
+        pick: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Pick<T, K>;
+        };
+        omit: {
+            <T>(array: T[], indices: number[]): T[];
+            <T extends object, K extends keyof T>(object: T, keys: K[]): Omit<T, K>;
+        };
+        get: {
+            (array: any[], path: string): any;
+            (object: any, path: string): any;
+        };
+        set: {
+            (array: any[], path: string, value: any): void;
+            (object: any, path: string, value: any): void;
+        };
+        remove: {
+            at: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, index: number): Partial<T>;
+            };
+            first: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            last: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+            byKey: {
+                <T>(array: T[], index: number): T[];
+                <T extends Record<string, any>>(object: T, key: string): Partial<T>;
+            };
+            byValue: {
+                <T>(array: T[], value: T): T[];
+                <T extends Record<string, any>>(object: T, value: any): Partial<T>;
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            all: {
+                <T>(array: T[]): T[];
+                <T extends Record<string, any>>(object: T): Partial<T>;
+            };
+        };
+        find: {
+            at: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number;
+                (object: any, index: number): [string, any] | undefined;
+            };
+            all: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T[];
+                <T extends Record<string, any>>(object: T, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): Partial<T>;
+            };
+            first: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            last: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): T | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): [string, any] | undefined;
+            };
+            key: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): string[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): string[];
+            };
+            value: {
+                <T>(array: T[], query: string, mode?: import("./modules/data/types").MatchMode): T[];
+                (object: any, query: string, mode?: import("./modules/data/types").MatchMode): any[];
+            };
+            byMatch: {
+                <T>(array: T[], query: string | number, mode?: import("./modules/data/types").MatchMode, key?: keyof T): number | undefined;
+                (object: any, query: string | number, mode?: import("./modules/data/types").MatchMode, searchBy?: "key" | "value"): string | undefined;
+            };
+        };
     };
     each: typeof each;
     throttle: typeof throttle;

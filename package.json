@@ -1,7 +1,7 @@
 {
     "name": "@k37z3r/jbase",
-    "version": "2.3.0",
-    "description": "A modern micro-framework for the web: jBase offers the familiar syntax of classic DOM libraries, but without their baggage. Fully typed, modular, and optimized for modern browser engines.",
+    "version": "2.4.0",
+    "description": "Ditch the legacy bloat. jBase is a blazing-fast, SSR-ready micro-framework combining an elegant DOM chaining API with powerful, immutable data utilities. Fully typed, modular, and built for modern web & Node.js environments.",
     "private": false,
     "main": "./dist/index.cjs",
     "module": "./dist/index.mjs",
@@ -37,21 +37,35 @@
         "url": "https://github.com/k37z3r/jBase-2.git"
     },
     "license": "GPL-3.0-or-later",
-    "dependencies": {
-        "jsdom": "^28.0.0",
-        "tslib": "^2.8.1"
+    "peerDependencies": {
+        "jsdom": "^28.0.0"
+    },
+    "peerDependenciesMeta": {
+        "jsdom": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@types/jsdom": "^27.0.0",
         "@types/node": "^22.0.0",
         "esbuild": "^0.27.2",
+        "jsdom": "^28.0.0",
+        "tslib": "^2.8.1",
         "typescript": "^5.3.3"
     },
     "keywords": [
         "framework",
-        "dom",
+        "micro-framework",
+        "dom-manipulation",
+        "jquery-alternative",
+        "data-utilities",
+        "immutable",
+        "ssr",
+        "server-side-rendering",
+        "isomorphic",
         "typescript",
         "javascript",
+        "ajax",
         "jbase"
     ],
     "type": "commonjs",

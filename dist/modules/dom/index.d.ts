@@ -26,6 +26,11 @@ export declare const domMethods: {
     checked(this: import("../..").JBaseClass, state?: boolean): boolean | import("../..").JBaseClass;
     selected(this: import("../..").JBaseClass, state?: boolean): boolean | import("../..").JBaseClass;
     disabled(this: import("../..").JBaseClass, state?: boolean): boolean | import("../..").JBaseClass;
+    check(this: import("../..").JBaseClass): import("../..").JBaseClass;
+    uncheck(this: import("../..").JBaseClass): import("../..").JBaseClass;
+    select(this: import("../..").JBaseClass): import("../..").JBaseClass;
+    disable(this: import("../..").JBaseClass): import("../..").JBaseClass;
+    enable(this: import("../..").JBaseClass): import("../..").JBaseClass;
     closest(this: import("../..").JBaseClass, selector: string): import("../..").JBaseClass;
     parent(this: import("../..").JBaseClass): import("../..").JBaseClass;
     children(this: import("../..").JBaseClass, selector?: string): import("../..").JBaseClass;
@@ -63,8 +68,13 @@ export declare const domMethods: {
     insertAfter(this: import("../..").JBaseClass, target: string | Element): import("../..").JBaseClass;
     wrap(this: import("../..").JBaseClass, wrapperHtml: string): import("../..").JBaseClass;
     unwrap(this: import("../..").JBaseClass): import("../..").JBaseClass;
-    html(this: import("../..").JBaseClass, content?: string): string | import("../..").JBaseClass;
+    html(this: import("../..").JBaseClass, content?: string, options?: {
+        executeScripts?: boolean;
+    }): string | import("../..").JBaseClass;
     text(this: import("../..").JBaseClass, content?: string): string | import("../..").JBaseClass;
+    load(this: import("../..").JBaseClass, url: string, options?: RequestInit & {
+        executeScripts?: boolean;
+    }): Promise<import("../..").JBaseClass>;
     attr(this: import("../..").JBaseClass, name: string, value?: string): string | null | import("../..").JBaseClass;
     val(this: import("../..").JBaseClass, value?: string): string | import("../..").JBaseClass;
     removeAttr(this: import("../..").JBaseClass, name: string): import("../..").JBaseClass;

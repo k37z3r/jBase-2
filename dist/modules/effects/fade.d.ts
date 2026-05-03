@@ -1,6 +1,6 @@
 /**
  * @file src/modules/effects/fade.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -41,4 +41,16 @@ export declare function fadeOut(this: jBase, options?: FadeOptions): jBase;
  * @returns The current jBase instance.
  */
 export declare function fadeToggle(this: jBase, options?: FadeOptions): jBase;
+/**
+ * * ALIAS for fadeIn.
+ */
+export declare const show: typeof fadeIn;
+/**
+ * * ALIAS for fadeOut.
+ */
+export declare const hide: typeof fadeOut;
+/**
+ * * ALIAS for fadeToggle.
+ */
+export declare const toggle: typeof fadeToggle;
 //# sourceMappingURL=fade.d.ts.map

@@ -1,6 +1,6 @@
 /**
  * @file src/utils.ts
- * @version 2.1.0
+ * @version 2.2.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -49,4 +49,11 @@ export declare function isBrowser(): boolean;
  * @param callback The function that will be executed on every object.
  */
 export declare function each<T>(collection: T[] | ArrayLike<T> | Record<string, T>, callback: (this: T, indexOrKey: any, value: T) => boolean | void): collection is T[] | ArrayLike<T> | Record<string, T>;
+/**
+ * * Internal Helper: Sanitizes an HTML string by removing dangerous attributes.
+ * * Strips inline event handlers and javascript: protocols to mitigate XSS.
+ * @param htmlStr The raw HTML string.
+ * @returns The sanitized HTML string.
+ */
+export declare function sanitizeDangerousAttributes(htmlStr: string): string;
 //# sourceMappingURL=utils.d.ts.map

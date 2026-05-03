@@ -1,6 +1,6 @@
 /**
- * @k37z3r/jbase - A modern micro-framework for the web: jBase offers the familiar syntax of classic DOM libraries, but without their baggage. Fully typed, modular, and optimized for modern browser engines.
- * @version 2.2.0
+ * @k37z3r/jbase - Ditch the legacy bloat. jBase is a blazing-fast, SSR-ready micro-framework combining an elegant DOM chaining API with powerful, immutable data utilities. Fully typed, modular, and built for modern web & Node.js environments.
+ * @version 2.4.0
  * @homepage https://github.com/k37z3r/jBase-2
  * @author Sven Minio (https://github.com/k37z3r/jBase-2)
  * @license GPL-3.0-or-later
@@ -46,6 +46,55 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
+// src/utils.ts
+function throttle(func, limit) {
+  let inThrottle;
+  return function(...args) {
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
+function debounce(func, delay) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+function isBrowser() {
+  return typeof window !== "undefined" && typeof window.requestAnimationFrame !== "undefined";
+}
+function each(collection, callback) {
+  const isArrayLike = Array.isArray(collection) || collection && typeof collection === "object" && "length" in collection && typeof collection.length === "number";
+  if (isArrayLike) {
+    const arr = collection;
+    for (let i = 0, len = arr.length; i < len; i++) {
+      if (callback.call(arr[i], i, arr[i]) === false) {
+        break;
+      }
+    }
+  } else {
+    const obj = collection;
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        if (callback.call(obj[key], key, obj[key]) === false) {
+          break;
+        }
+      }
+    }
+  }
+  return collection;
+}
+function sanitizeDangerousAttributes(htmlStr) {
+  let cleanStr = htmlStr.replace(/on\w+\s*=\s*(['"])(?:(?!\1).)*\1/gi, "");
+  cleanStr = cleanStr.replace(/(href|action)\s*=\s*(['"])\s*javascript\s*:[\s\S]*?\2/gi, "");
+  return cleanStr;
+}
+
 // src/core.ts
 var jBase = class extends Array {
   /**
@@ -82,7 +131,7 @@ var jBase = class extends Array {
       const trimmed = selector.trim();
       if (trimmed.startsWith("<") && trimmed.endsWith(">")) {
         const tempDiv = this.doc.createElement("div");
-        tempDiv.innerHTML = trimmed;
+        tempDiv.innerHTML = sanitizeDangerousAttributes(trimmed);
         this.push(...Array.from(tempDiv.children));
       } else if (trimmed.startsWith("#") && !trimmed.includes(" ") && !trimmed.includes(".")) {
         const el = this.doc.getElementById(trimmed.slice(1));
@@ -238,52 +287,6 @@ __export(binding_exports, {
   once: () => once,
   trigger: () => trigger
 });
-
-// src/utils.ts
-function throttle(func, limit) {
-  let inThrottle;
-  return function(...args) {
-    const context = this;
-    if (!inThrottle) {
-      func.apply(context, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
-    }
-  };
-}
-function debounce(func, delay) {
-  let timer;
-  return function(...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => func.apply(this, args), delay);
-  };
-}
-function isBrowser() {
-  return typeof window !== "undefined" && typeof window.requestAnimationFrame !== "undefined";
-}
-function each(collection, callback) {
-  const isArrayLike = Array.isArray(collection) || collection && typeof collection === "object" && "length" in collection && typeof collection.length === "number";
-  if (isArrayLike) {
-    const arr = collection;
-    for (let i = 0, len = arr.length; i < len; i++) {
-      if (callback.call(arr[i], i, arr[i]) === false) {
-        break;
-      }
-    }
-  } else {
-    const obj = collection;
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        if (callback.call(obj[key], key, obj[key]) === false) {
-          break;
-        }
-      }
-    }
-  }
-  return collection;
-}
-
-// src/modules/events/binding.ts
 var JB_EVENTS = "__jb_events";
 function on(events, selectorOrDataOrHandler, dataOrHandler, handlerOrUndefined) {
   let selector;
@@ -681,15 +684,87 @@ function prop(name, value) {
 var content_exports = {};
 __export(content_exports, {
   html: () => html,
+  load: () => load,
   text: () => text
 });
-function html(content) {
+
+// src/modules/http/get.ts
+var get_exports = {};
+__export(get_exports, {
+  get: () => get,
+  getText: () => getText
+});
+async function get(url, option) {
+  const fetchOptions = { ...option };
+  if (fetchOptions.method?.toLowerCase() === "post") {
+    fetchOptions.method = "GET";
+  }
+  if (!fetchOptions.signal) {
+    fetchOptions.signal = AbortSignal.timeout(5e3);
+  }
+  const response = await fetch(url, {
+    ...fetchOptions
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP Error: ${response.status}`);
+  }
+  const text2 = await response.text();
+  try {
+    return text2 ? JSON.parse(text2) : {};
+  } catch (e) {
+    return text2;
+  }
+}
+async function getText(url, option) {
+  const fetchOptions = { ...option };
+  if (fetchOptions.method?.toLowerCase() !== "get") {
+    fetchOptions.method = "GET";
+  }
+  if (!fetchOptions.signal) {
+    fetchOptions.signal = AbortSignal.timeout(5e3);
+  }
+  const response = await fetch(url, {
+    ...fetchOptions
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP Error: ${response.status}`);
+  }
+  const text2 = await response.text();
+  return text2;
+}
+
+// src/modules/dom/content.ts
+function extractAndExecuteScripts(htmlStr, doc) {
+  const tempDiv = doc.createElement("div");
+  tempDiv.innerHTML = htmlStr;
+  const scripts = tempDiv.querySelectorAll("script");
+  scripts.forEach((oldScript) => {
+    const newScript = doc.createElement("script");
+    Array.from(oldScript.attributes).forEach((attr2) => {
+      newScript.setAttribute(attr2.name, attr2.value);
+    });
+    if (oldScript.textContent) {
+      newScript.textContent = oldScript.textContent;
+    }
+    doc.head.appendChild(newScript);
+    doc.head.removeChild(newScript);
+    oldScript.remove();
+  });
+  return tempDiv.innerHTML;
+}
+function html(content, options) {
   if (content === void 0) {
     const el = this[0];
     return el instanceof Element ? el.innerHTML : "";
   }
+  let finalHtml = content;
+  const execute = options?.executeScripts === true;
   this.each(function(el) {
-    if (el instanceof Element) el.innerHTML = content;
+    if (el instanceof Element) {
+      const doc = el.ownerDocument || document;
+      const processedHtml = execute ? extractAndExecuteScripts(finalHtml, doc) : sanitizeDangerousAttributes(finalHtml);
+      el.innerHTML = processedHtml;
+    }
   });
   return this;
 }
@@ -703,6 +778,18 @@ function text(content) {
       el.textContent = content;
     }
   });
+  return this;
+}
+async function load(url, options) {
+  try {
+    const fetchOptions = { ...options };
+    delete fetchOptions.executeScripts;
+    const htmlStr = await getText(url, fetchOptions);
+    this.html(htmlStr, { executeScripts: options?.executeScripts });
+  } catch (error) {
+    console.error(`jBase .load() failed to fetch: ${url}`, error);
+    throw error;
+  }
   return this;
 }
 
@@ -726,7 +813,7 @@ __export(manipulation_exports, {
 });
 function parseHTML(html2, doc) {
   const tmp = doc.createElement("div");
-  tmp.innerHTML = html2.trim();
+  tmp.innerHTML = sanitizeDangerousAttributes(html2.trim());
   return tmp.firstElementChild;
 }
 function getDoc(collection) {
@@ -737,10 +824,10 @@ function getDoc(collection) {
 }
 function normalizeToFragment(content, doc) {
   const fragment = doc.createDocumentFragment();
-  const add2 = (item) => {
+  const add4 = (item) => {
     if (typeof item === "string") {
       const temp = doc.createElement("div");
-      temp.innerHTML = item.trim();
+      temp.innerHTML = sanitizeDangerousAttributes(item.trim());
       while (temp.firstChild) {
         fragment.appendChild(temp.firstChild);
       }
@@ -748,11 +835,11 @@ function normalizeToFragment(content, doc) {
       fragment.appendChild(item);
     } else if (item instanceof jBase || Array.isArray(item) || item instanceof NodeList) {
       each(item, function(_index, child) {
-        add2(child);
+        add4(child);
       });
     }
   };
-  add2(content);
+  add4(content);
   return fragment;
 }
 function remove() {
@@ -780,9 +867,10 @@ function replaceWithClone() {
 }
 function append(content) {
   if (typeof content === "string") {
+    const safeContent = sanitizeDangerousAttributes(content);
     this.each(function(el) {
       if (el instanceof Element) {
-        el.insertAdjacentHTML("beforeend", content);
+        el.insertAdjacentHTML("beforeend", safeContent);
       }
     });
     return this;
@@ -802,9 +890,10 @@ function append(content) {
 }
 function prepend(content) {
   if (typeof content === "string") {
+    const safeContent = sanitizeDangerousAttributes(content);
     this.each(function(el) {
       if (el instanceof Element) {
-        el.insertAdjacentHTML("afterbegin", content);
+        el.insertAdjacentHTML("afterbegin", safeContent);
       }
     });
     return this;
@@ -824,9 +913,10 @@ function prepend(content) {
 }
 function before(content) {
   if (typeof content === "string") {
+    const safeContent = sanitizeDangerousAttributes(content);
     this.each(function(el) {
       if (el instanceof Element) {
-        el.insertAdjacentHTML("beforebegin", content);
+        el.insertAdjacentHTML("beforebegin", safeContent);
       }
     });
     return this;
@@ -846,9 +936,10 @@ function before(content) {
 }
 function after(content) {
   if (typeof content === "string") {
+    const safeContent = sanitizeDangerousAttributes(content);
     this.each(function(el) {
       if (el instanceof Element) {
-        el.insertAdjacentHTML("afterend", content);
+        el.insertAdjacentHTML("afterend", safeContent);
       }
     });
     return this;
@@ -1272,9 +1363,14 @@ function not(selectorOrFn) {
 // src/modules/dom/states.ts
 var states_exports = {};
 __export(states_exports, {
+  check: () => check,
   checked: () => checked,
+  disable: () => disable,
   disabled: () => disabled,
-  selected: () => selected
+  enable: () => enable,
+  select: () => select,
+  selected: () => selected,
+  uncheck: () => uncheck
 });
 function checked(state) {
   if (state === void 0) {
@@ -1313,6 +1409,21 @@ function disabled(state) {
     }
   });
   return this;
+}
+function check() {
+  return checked.call(this, true);
+}
+function uncheck() {
+  return checked.call(this, false);
+}
+function select() {
+  return selected.call(this, true);
+}
+function disable() {
+  return disabled.call(this, true);
+}
+function enable() {
+  return disabled.call(this, false);
 }
 
 // src/modules/dom/index.ts
@@ -1457,7 +1568,10 @@ var fade_exports = {};
 __export(fade_exports, {
   fadeIn: () => fadeIn,
   fadeOut: () => fadeOut,
-  fadeToggle: () => fadeToggle
+  fadeToggle: () => fadeToggle,
+  hide: () => hide,
+  show: () => show,
+  toggle: () => toggle
 });
 function fadeIn(options = {}) {
   if (!isBrowser())
@@ -1515,6 +1629,9 @@ function fadeToggle(options = {}) {
   });
   return this;
 }
+var show = fadeIn;
+var hide = fadeOut;
+var toggle = fadeToggle;
 
 // src/modules/effects/index.ts
 var effectMethods = {
@@ -1522,47 +1639,6 @@ var effectMethods = {
   ...vertical_exports,
   ...fade_exports
 };
-
-// src/modules/http/get.ts
-var get_exports = {};
-__export(get_exports, {
-  get: () => get,
-  getText: () => getText
-});
-async function get(url, option) {
-  const fetchOptions = { ...option };
-  if (fetchOptions.method?.toLowerCase() === "post") {
-    fetchOptions.method = "GET";
-  }
-  if (!fetchOptions.signal) {
-    fetchOptions.signal = AbortSignal.timeout(5e3);
-  }
-  const response = await fetch(url, {
-    ...fetchOptions
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP Error: ${response.status}`);
-  }
-  const text2 = await response.text();
-  return text2 ? JSON.parse(text2) : {};
-}
-async function getText(url, option) {
-  const fetchOptions = { ...option };
-  if (fetchOptions.method?.toLowerCase() !== "get") {
-    fetchOptions.method = "GET";
-  }
-  if (!fetchOptions.signal) {
-    fetchOptions.signal = AbortSignal.timeout(5e3);
-  }
-  const response = await fetch(url, {
-    ...fetchOptions
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP Error: ${response.status}`);
-  }
-  const text2 = await response.text();
-  return text2;
-}
 
 // src/modules/http/post.ts
 var post_exports = {};
@@ -1590,7 +1666,11 @@ async function post(url, body = {}, option) {
     throw new Error(`HTTP Error: ${response.status}`);
   }
   const text2 = await response.text();
-  return text2 ? JSON.parse(text2) : {};
+  try {
+    return text2 ? JSON.parse(text2) : {};
+  } catch (e) {
+    return text2;
+  }
 }
 
 // src/modules/http/upload.ts
@@ -1648,9 +1728,16 @@ var arrays_exports = {};
 __export(arrays_exports, {
   add: () => add,
   chunk: () => chunk,
+  clear: () => clear,
+  empty: () => empty2,
   find: () => find,
+  get: () => get2,
+  merge: () => merge,
   mergeArray: () => mergeArray,
-  remove: () => remove2
+  omit: () => omit,
+  pick: () => pick,
+  remove: () => remove2,
+  set: () => set
 });
 function chunk(array, size) {
   const chunks = [];
@@ -1662,11 +1749,37 @@ function chunk(array, size) {
 function mergeArray(...arrays) {
   return [].concat(...arrays);
 }
+var merge = mergeArray;
 function add(array, item, index = array.length) {
   const copy = [...array];
   const idx = index < 0 ? array.length + index + 1 : index;
   copy.splice(idx, 0, item);
   return copy;
+}
+function clear(array) {
+  return [];
+}
+var empty2 = clear;
+function pick(array, indices) {
+  return array.filter((_, index) => indices.includes(index));
+}
+function omit(array, indices) {
+  return array.filter((_, index) => !indices.includes(index));
+}
+function get2(array, path) {
+  return path.split(".").reduce((acc, part) => acc && acc[part], array);
+}
+function set(array, path, value) {
+  const parts = path.split(".");
+  let current = array;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i];
+    if (!current[part]) {
+      current[part] = isNaN(Number(parts[i + 1])) ? {} : [];
+    }
+    current = current[part];
+  }
+  current[parts[parts.length - 1]] = value;
 }
 var remove2 = {
   /**
@@ -1730,6 +1843,38 @@ var remove2 = {
           return false;
       }
     });
+  },
+  /**
+   * * Removes the element at a specific index.
+   * * Mirrors object.remove.byKey.
+   * @example remove.byKey(['a', 'b', 'c'], 1) => ['a', 'c']
+   * @template T The type of the items in the array.
+   * @param array The source array.
+   * @param index The index (key) to remove.
+   * @returns A new array without the specified index.
+   */
+  byKey(array, index) {
+    return this.at(array, index);
+  },
+  /**
+   * * Removes all elements that match a specific value exactly (Strict Equality).
+   * * Mirrors object.remove.byValue.
+   * @example remove.byValue([1, 2, 1, 3], 1) => [2, 3]
+   * @template T The type of the items in the array.
+   * @param array The source array.
+   * @param value The value to remove.
+   * @returns A new array without the matching values.
+   */
+  byValue(array, value) {
+    return array.filter((item) => item !== value);
+  },
+  /**
+   * * ALIAS for clear. Removes all elements.
+   * @param array The source array.
+   * @returns A new, empty array.
+   */
+  all(array) {
+    return clear(array);
   }
 };
 var find = {
@@ -1850,7 +1995,44 @@ var find = {
     });
   },
   /**
-   * * Removes all elements matching a query condition.
+   * * Finds all indices (keys) matching the query.
+   * * Mirrors object.find.key(). For arrays, keys are the indices.
+   * @param array The array to search.
+   * @param query The search query.
+   * @param mode The comparison mode.
+   * @returns An array of matching indices as strings.
+   */
+  key(array, query, mode = "exact") {
+    const queryStr = String(query).toLowerCase();
+    return Object.keys(array).filter((indexKey) => {
+      const valStr = String(indexKey).toLowerCase();
+      switch (mode) {
+        case "exact":
+          return valStr === queryStr;
+        case "startsWith":
+          return valStr.startsWith(queryStr);
+        case "endsWith":
+          return valStr.endsWith(queryStr);
+        case "contains":
+          return valStr.includes(queryStr);
+        default:
+          return false;
+      }
+    });
+  },
+  /**
+   * * Finds all values matching the query.
+   * * Mirrors object.find.value(). Identical to find.all() for flat arrays.
+   * @param array The array to search.
+   * @param query The search query.
+   * @param mode The comparison mode.
+   * @returns An array of matching values.
+   */
+  value(array, query, mode = "exact") {
+    return this.all(array, query, mode);
+  },
+  /**
+   * * Finds the key of the first match based on the query condition.
    * @example find.byMatch(users, 'Admin', 'exact', 'role') => 0
    * @template T The type of the items in the array.
    * @param array The array.
@@ -1883,13 +2065,22 @@ var find = {
 // src/modules/data/objects.ts
 var objects_exports = {};
 __export(objects_exports, {
+  add: () => add2,
+  chunk: () => chunk2,
+  clear: () => clear2,
+  empty: () => empty3,
   find: () => find2,
-  get: () => get2,
+  get: () => get3,
+  merge: () => merge2,
   mergeObjects: () => mergeObjects,
-  omit: () => omit,
-  pick: () => pick,
-  set: () => set
+  omit: () => omit2,
+  pick: () => pick2,
+  remove: () => remove3,
+  set: () => set2
 });
+function isObject(item) {
+  return item && typeof item === "object" && !Array.isArray(item);
+}
 function mergeObjects(target, ...sources) {
   if (!sources.length)
     return target;
@@ -1908,24 +2099,44 @@ function mergeObjects(target, ...sources) {
   }
   return mergeObjects(target, ...sources);
 }
-function pick(obj, keys) {
+var merge2 = mergeObjects;
+function chunk2(obj, size) {
+  const entries = Object.entries(obj);
+  const chunks = [];
+  for (let i = 0; i < entries.length; i += size) {
+    const slice = entries.slice(i, i + size);
+    chunks.push(Object.fromEntries(slice));
+  }
+  return chunks;
+}
+function add2(obj, key, value, index = Object.keys(obj).length) {
+  const entries = Object.entries(obj);
+  const idx = index < 0 ? entries.length + index + 1 : index;
+  entries.splice(idx, 0, [key, value]);
+  return Object.fromEntries(entries);
+}
+function clear2(obj) {
+  return {};
+}
+var empty3 = clear2;
+function pick2(obj, keys) {
   const ret = {};
   each(keys, function(_index, key) {
     if (key in obj) ret[key] = obj[key];
   });
   return ret;
 }
-function omit(obj, keys) {
+function omit2(obj, keys) {
   const ret = { ...obj };
   each(keys, function(_index, key) {
     delete ret[key];
   });
   return ret;
 }
-function get2(obj, path) {
+function get3(obj, path) {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
 }
-function set(obj, path, value) {
+function set2(obj, path, value) {
   const parts = path.split(".");
   let current = obj;
   for (let i = 0; i < parts.length - 1; i++) {
@@ -1935,6 +2146,101 @@ function set(obj, path, value) {
   }
   current[parts[parts.length - 1]] = value;
 }
+var remove3 = {
+  /**
+   * * Removes an entry at a specific index.
+   * @example remove.at({a: 1, b: 2, c: 3}, -1) => {a: 1, b: 2}
+   * @param obj The source object.
+   * @param index The index (negative values allowed).
+   * @returns A new object with the element removed.
+   */
+  at(obj, index) {
+    const entries = Object.entries(obj);
+    const idx = index < 0 ? entries.length + index : index;
+    if (idx >= 0 && idx < entries.length) {
+      entries.splice(idx, 1);
+    }
+    return Object.fromEntries(entries);
+  },
+  /**
+   * * Removes the first entry from the object.
+   * @param obj The source object.
+   * @returns A new object without the first entry.
+   */
+  first(obj) {
+    const entries = Object.entries(obj).slice(1);
+    return Object.fromEntries(entries);
+  },
+  /**
+   * * Removes the last entry from the object.
+   * @param obj The source object.
+   * @returns A new object without the last entry.
+   */
+  last(obj) {
+    const entries = Object.entries(obj).slice(0, -1);
+    return Object.fromEntries(entries);
+  },
+  /**
+   * * Removes all entries matching a query condition.
+   * @example remove.byMatch(config, 'hidden', 'exact', 'key')
+   * @param obj The source object.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param searchBy Whether to search by 'key' or 'value' (default: 'key').
+   * @returns A new object without the matching elements.
+   */
+  byMatch(obj, query, mode = "exact", searchBy = "key") {
+    const queryStr = String(query).toLowerCase();
+    const filteredEntries = Object.entries(obj).filter(([key, val2]) => {
+      const target = searchBy === "key" ? key : val2;
+      const valStr = String(target).toLowerCase();
+      switch (mode) {
+        case "exact":
+          return valStr !== queryStr;
+        case "startsWith":
+          return !valStr.startsWith(queryStr);
+        case "endsWith":
+          return !valStr.endsWith(queryStr);
+        case "contains":
+          return !valStr.includes(queryStr);
+        default:
+          return true;
+      }
+    });
+    return Object.fromEntries(filteredEntries);
+  },
+  /**
+   * * Removes all entries that have a specific key.
+   * @example remove.byKey({ a: 1, b: 2, c: 3 }, 'b') => { a: 1, c: 3 }
+   * @param obj The source object.
+   * @param key The key to remove.
+   * @returns A new object without the specified key.
+   */
+  byKey(obj, key) {
+    const ret = { ...obj };
+    delete ret[key];
+    return ret;
+  },
+  /**
+   * * Removes all entries that match a specific value exactly (Strict Equality).
+   * @example remove.byValue({ a: 1, b: 2, c: 1 }, 1) => { b: 2 }
+   * @param obj The source object.
+   * @param value The value to remove.
+   * @returns A new object without the matching values.
+   */
+  byValue(obj, value) {
+    const filteredEntries = Object.entries(obj).filter(([_key, val2]) => val2 !== value);
+    return Object.fromEntries(filteredEntries);
+  },
+  /**
+   * * ALIAS for clear. Removes all entries.
+   * @param obj The source object.
+   * @returns A new, empty object.
+   */
+  all(obj) {
+    return clear2(obj);
+  }
+};
 var find2 = {
   /**
    * * Returns the n-th entry of an object as a [key, value] pair. Supports negative indices.
@@ -1947,6 +2253,36 @@ var find2 = {
     const entries = Object.entries(obj);
     const idx = index < 0 ? entries.length + index : index;
     return entries[idx];
+  },
+  /**
+   * * Returns a NEW OBJECT containing ALL elements matching the condition.
+   * * Mirrors array.find.all() but returns a partial object.
+   * @example find.all({a: 1, b: 2, c: 1}, 1, 'exact', 'value') => {a: 1, c: 1}
+   * @param obj The object to search.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param searchBy Whether to search by 'key' or 'value' (default: 'key').
+   * @returns A new object with only the matching elements.
+   */
+  all(obj, query, mode = "exact", searchBy = "key") {
+    const queryStr = String(query).toLowerCase();
+    const filteredEntries = Object.entries(obj).filter(([key, val2]) => {
+      const target = searchBy === "key" ? key : val2;
+      const valStr = String(target).toLowerCase();
+      switch (mode) {
+        case "exact":
+          return valStr === queryStr;
+        case "startsWith":
+          return valStr.startsWith(queryStr);
+        case "endsWith":
+          return valStr.endsWith(queryStr);
+        case "contains":
+          return valStr.includes(queryStr);
+        default:
+          return false;
+      }
+    });
+    return Object.fromEntries(filteredEntries);
   },
   /**
    * * Finds the first entry where the key or value matches the query.
@@ -2057,16 +2393,134 @@ var find2 = {
           return false;
       }
     });
+  },
+  /**
+   * * Finds the key of the first match based on the query condition.
+   * * Mirrors array.find.byMatch(). For objects, it returns the key instead of a numeric index.
+   * @example find.byMatch(config, 'admin', 'exact', 'value') => 'role'
+   * @param obj The object to search.
+   * @param query The search query.
+   * @param mode The comparison mode ('exact', 'contains', 'startsWith', 'endsWith').
+   * @param searchBy Whether to search by 'key' or 'value' (default: 'key').
+   * @returns The matched key as a string, or undefined if no match is found.
+   */
+  byMatch(obj, query, mode = "exact", searchBy = "key") {
+    const queryStr = String(query).toLowerCase();
+    const entries = Object.entries(obj);
+    const found = entries.find(([key, val2]) => {
+      const target = searchBy === "key" ? key : val2;
+      const valStr = String(target).toLowerCase();
+      switch (mode) {
+        case "exact":
+          return valStr === queryStr;
+        case "startsWith":
+          return valStr.startsWith(queryStr);
+        case "endsWith":
+          return valStr.endsWith(queryStr);
+        case "contains":
+          return valStr.includes(queryStr);
+        default:
+          return false;
+      }
+    });
+    return found ? found[0] : void 0;
   }
 };
-function isObject(item) {
-  return item && typeof item === "object" && !Array.isArray(item);
-}
 
 // src/modules/data/index.ts
+function chunk3(data2, size) {
+  return Array.isArray(data2) ? chunk(data2, size) : chunk2(data2, size);
+}
+function merge3(data2, ...args) {
+  return Array.isArray(data2) ? merge(data2, ...args) : merge2(data2, ...args);
+}
+function add3(data2, arg1, arg2, arg3) {
+  return Array.isArray(data2) ? add(data2, arg1, arg2) : add2(data2, arg1, arg2, arg3);
+}
+function clear3(data2) {
+  return Array.isArray(data2) ? clear(data2) : clear2(data2);
+}
+function pick3(data2, keysOrIndices) {
+  return Array.isArray(data2) ? pick(data2, keysOrIndices) : pick2(data2, keysOrIndices);
+}
+function omit3(data2, keysOrIndices) {
+  return Array.isArray(data2) ? omit(data2, keysOrIndices) : omit2(data2, keysOrIndices);
+}
+function get4(data2, path) {
+  return Array.isArray(data2) ? get2(data2, path) : get3(data2, path);
+}
+function set3(data2, path, value) {
+  return Array.isArray(data2) ? set(data2, path, value) : set2(data2, path, value);
+}
+function removeAt(data2, index) {
+  return Array.isArray(data2) ? remove2.at(data2, index) : remove3.at(data2, index);
+}
+function removeFirst(data2) {
+  return Array.isArray(data2) ? remove2.first(data2) : remove3.first(data2);
+}
+function removeLast(data2) {
+  return Array.isArray(data2) ? remove2.last(data2) : remove3.last(data2);
+}
+function removeByMatch(data2, query, mode, keyOrSearchBy) {
+  return Array.isArray(data2) ? remove2.byMatch(data2, query, mode, keyOrSearchBy) : remove3.byMatch(data2, query, mode, keyOrSearchBy);
+}
+function removeByKey(data2, keyOrIndex) {
+  return Array.isArray(data2) ? remove2.byKey(data2, keyOrIndex) : remove3.byKey(data2, keyOrIndex);
+}
+function removeByValue(data2, value) {
+  return Array.isArray(data2) ? remove2.byValue(data2, value) : remove3.byValue(data2, value);
+}
+function findAt(data2, arg1, arg2, arg3) {
+  return Array.isArray(data2) ? find.at(data2, arg1, arg2, arg3) : find2.at(data2, arg1);
+}
+function findAll2(data2, query, mode, keyOrSearchBy) {
+  return Array.isArray(data2) ? find.all(data2, query, mode, keyOrSearchBy) : find2.all(data2, query, mode, keyOrSearchBy);
+}
+function findFirst(data2, query, mode, keyOrSearchBy) {
+  return Array.isArray(data2) ? find.first(data2, query, mode, keyOrSearchBy) : find2.first(data2, query, mode, keyOrSearchBy);
+}
+function findLast(data2, query, mode, keyOrSearchBy) {
+  return Array.isArray(data2) ? find.last(data2, query, mode, keyOrSearchBy) : find2.last(data2, query, mode, keyOrSearchBy);
+}
+function findKey(data2, query, mode) {
+  return Array.isArray(data2) ? find.key(data2, query, mode) : find2.key(data2, query, mode);
+}
+function findValue(data2, query, mode) {
+  return Array.isArray(data2) ? find.value(data2, query, mode) : find2.value(data2, query, mode);
+}
+function findByMatch(data2, query, mode, keyOrSearchBy) {
+  return Array.isArray(data2) ? find.byMatch(data2, query, mode, keyOrSearchBy) : find2.byMatch(data2, query, mode, keyOrSearchBy);
+}
 var data = {
   arr: arrays_exports,
-  obj: objects_exports
+  obj: objects_exports,
+  chunk: chunk3,
+  merge: merge3,
+  add: add3,
+  clear: clear3,
+  empty: clear3,
+  pick: pick3,
+  omit: omit3,
+  get: get4,
+  set: set3,
+  remove: {
+    at: removeAt,
+    first: removeFirst,
+    last: removeLast,
+    byKey: removeByKey,
+    byValue: removeByValue,
+    byMatch: removeByMatch,
+    all: clear3
+  },
+  find: {
+    at: findAt,
+    all: findAll2,
+    first: findFirst,
+    last: findLast,
+    key: findKey,
+    value: findValue,
+    byMatch: findByMatch
+  }
 };
 
 // src/index.ts
@@ -2125,6 +2579,17 @@ var __ = init;
   throttle
 });
 /**
+ * @file src/utils.ts
+ * @version 2.2.0
+ * @since 2.0.0
+ * @license GPL-3.0-or-later
+ * @copyright Sven Minio 2026
+ * @author Sven Minio <https://sven-minio.de>
+ * @category Utilities
+ * @description
+ * * General utility functions and helpers (e.g., debounce, throttle, type checks).
+ */
+/**
  * @file src/core.ts
  * @version 2.2.0
  * @since 2.0.0
@@ -2177,17 +2642,6 @@ var __ = init;
  * * Class manipulation methods (addClass, removeClass, etc.).
  * @requires ./styles
  * * Style manipulation methods (css).
- */
-/**
- * @file src/utils.ts
- * @version 2.1.0
- * @since 2.0.0
- * @license GPL-3.0-or-later
- * @copyright Sven Minio 2026
- * @author Sven Minio <https://sven-minio.de>
- * @category Utilities
- * @description
- * * General utility functions and helpers (e.g., debounce, throttle, type checks).
  */
 /**
  * @file src/modules/events/binding.ts
@@ -2306,8 +2760,19 @@ var __ = init;
  * * Depends on the core jBase class for type definitions.
  */
 /**
+ * @file src/modules/http/get.ts
+ * @version 2.0.6
+ * @since 2.0.0
+ * @license GPL-3.0-or-later
+ * @copyright Sven Minio 2026
+ * @author Sven Minio <https://sven-minio.de>
+ * @category HTTP
+ * @description
+ * * Abstraction for HTTP GET requests.
+ */
+/**
  * @file src/modules/dom/content.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2320,7 +2785,7 @@ var __ = init;
  */
 /**
  * @file src/modules/dom/manipulation.ts
- * @version 2.0.3
+ * @version 2.0.4
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2350,7 +2815,7 @@ var __ = init;
  */
 /**
  * @file src/modules/dom/states.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2418,7 +2883,7 @@ var __ = init;
  */
 /**
  * @file src/modules/effects/fade.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2451,19 +2916,8 @@ var __ = init;
  * * Opacity fade effects (fadeIn, fadeOut).
  */
 /**
- * @file src/modules/http/get.ts
- * @version 2.0.5
- * @since 2.0.0
- * @license GPL-3.0-or-later
- * @copyright Sven Minio 2026
- * @author Sven Minio <https://sven-minio.de>
- * @category HTTP
- * @description
- * * Abstraction for HTTP GET requests.
- */
-/**
  * @file src/modules/http/post.ts
- * @version 2.0.4
+ * @version 2.0.5
  * @since 2.0.2
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2502,7 +2956,7 @@ var __ = init;
  */
 /**
  * @file src/modules/data/arrays.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2515,7 +2969,7 @@ var __ = init;
  */
 /**
  * @file src/modules/data/objects.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -2530,14 +2984,16 @@ var __ = init;
  */
 /**
  * @file src/modules/data/index.ts
- * @version 2.0.3
+ * @version 2.1.0
  * @since 2.0.0
  * * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
  * @author Sven Minio <https://sven-minio.de>
  * @category Data
  * @description
- * * Central entry point for data manipulation modules. Aggregates array and object utilities.
+ * * Central entry point for data manipulation. 
+ * * Features a dynamic, overloaded API router that automatically delegates 
+ * * to array or object utilities based on the input type.
  * @requires ./arrays
  * * Array manipulation methods.
  * @requires ./objects
@@ -2545,7 +3001,7 @@ var __ = init;
  */
 /**
  * @file src/index.ts
- * @version 2.2.0
+ * @version 2.3.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026

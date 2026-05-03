@@ -1,6 +1,9 @@
-* [`chunk`](#usage-chunk) | [`mergeArray`](#usage-mergeArray) | [`add`](#usage-add)
-* [`remove.at`](#usage-remove.at) | [`remove.first`](#usage-remove.first) | [`remove.last`](#usage-remove.last) | [`remove.byMatch`](#usage-remove.byMatch)
-* [`findAt`](#usage-find-at) | [`findFirst`](#usage-find-first) | [`findLast`](#usage-find-last) | [`findAll`](#usage-find-all) | [`findByMatch`](#usage-find-byMatch)
+* [`chunk`](#usage-chunk) | [`mergeArray` / `merge`](#usage-mergeArray) | [`add`](#usage-add) | [`clear` / `empty`](#usage-clear)
+* [`pick`](#usage-pick) | [`omit`](#usage-omit) | [`get`](#usage-get) | [`set`](#usage-set)
+* [`remove.at`](#usage-remove-at) | [`remove.first`](#usage-remove-first) | [`remove.last`](#usage-remove-last) | [`remove.byMatch`](#usage-remove-byMatch) | [`remove.byKey`](#usage-remove-byKey) | [`remove.byValue`](#usage-remove-byValue) | [`remove.all`](#usage-remove-all)
+* [`find.at`](#usage-find-at) | [`find.first`](#usage-find-first) | [`find.last`](#usage-find-last) | [`find.all`](#usage-find-all) | [`find.key`](#usage-find-key) | [`find.value`](#usage-find-value) | [`find.byMatch`](#usage-find-byMatch)
+
+
 
 ---
 
@@ -29,7 +32,7 @@ const chunks = $.data.chunk(data, 2);
 
 ---
 
-## <a id="usage-mergeArray"></a>.mergeArray
+## <a id="usage-mergeArray"></a>.mergeArray (Alias: .merge)
 
 **Description**
 Merges multiple arrays into a single, flat array.
@@ -49,7 +52,9 @@ Merges multiple arrays into a single, flat array.
 const a = [1, 2];
 const b = [3, 4];
 const c = [5, 6];
-const result = $.data.mergeArray(a, b, c);
+const result = $.data.merge(a, b, c);
+//Alternative: $.data.mergeArray(a, b, c);
+
 // Result: [1, 2, 3, 4, 5, 6]
 
 ```
@@ -79,6 +84,125 @@ const list = ['a', 'c'];
 const result = $.data.add(list, 'b', 1);
 // Result: ['a', 'b', 'c']
 
+```
+
+---
+
+## <a id="usage-clear"></a>.clear (Alias: .empty)
+
+**Description**
+Clears the array and returns a new empty array. This method is strictly immutable; it does not mutate the original array, but instead provides a clean, predictable way to reset data states.
+
+**Parameters**
+
+* `array` (Array): The array to clear.
+
+**Returns**
+
+* (Array): A new, empty array (`[]`).
+
+**Example**
+```javascript
+const myData = [1, 2, 3, 4, 5];
+const resetData = $.data.clear(myData);
+// Alternatively: $.data.empty(myData);
+
+// Result: resetData is [], myData remains [1, 2, 3, 4, 5]
+```
+
+---
+
+## <a id="usage-pick"></a>.pick
+
+**Description**
+Creates a new array containing only the elements at the specified indices (Allowlist). Mirrors the object API.
+
+**Parameters**
+
+* `array` (Array): The source array.
+* `indices` (Number[]): Array of indices to keep.
+
+**Returns**
+
+* (Array): A new array with selected elements.
+
+**Example**
+```javascript
+const list = ['a', 'b', 'c', 'd'];
+const result = $.data.pick(list, [0, 2]);
+// Result: ['a', 'c']
+```
+
+---
+
+## <a id="usage-omit"></a>.omit
+
+**Description**
+Creates a new array containing all elements EXCEPT those at the specified indices (Blocklist). Mirrors the object API.
+
+**Parameters**
+
+* `array` (Array): The source array.
+* `indices` (Number[]): Array of indices to remove.
+
+**Returns**
+
+* (Array): A new array without the specified elements.
+
+**Example**
+
+```javascript
+const list = ['a', 'b', 'c', 'd'];
+const result = $.data.omit(list, [1, 3]);
+// Result: ['a', 'c']
+```
+
+---
+
+## <a id="usage-get"></a>.get
+
+**Description**
+Safely retrieves a value from a nested array/object structure (Safe Navigation) using dot-notation. Mirrors the object API.
+
+**Parameters**
+
+* `array` (Array): The source array.
+* `path` (String): The path as a dot-notation string.
+
+**Returns**
+
+* (Any | undefined): The found value or `undefined` if any part is missing.
+
+**Example**
+```javascript
+const users = [{ profile: { name: 'Sven' } }];
+const name = $.data.get(users, '0.profile.name');
+// Result: 'Sven'
+```
+
+---
+
+## <a id="usage-set"></a>.set
+
+**Description**
+Sets a value deeply within a nested array/object structure. Automatically creates missing intermediate objects or arrays based on the path. Mirrors the object API.
+
+**Parameters**
+
+* `array` (Array): The array to modify.
+* `path` (String): The path as a string (e.g., '0.profile.name').
+* `value` (Any): The value to set.
+
+**Returns**
+
+* (void): Modifies the array in place.
+
+**Example**
+
+```javascript
+const users = [];
+$.data.set(users, '0.profile.role', 'admin');
+// Result: [{ profile: { role: 'admin' } }]
 ```
 
 ---
@@ -187,6 +311,60 @@ const users = [
 const nonAdmins = $.data.remove.byMatch(users, 'admin', 'exact', 'role');
 // Result: [{ id: 2, role: 'user' }]
 ```
+
+---
+
+## <a id="usage-remove-byKey"></a>.remove.byKey
+
+**Description**
+Removes the element at a specific index. Mirrors `object.remove.byKey`. Functionally identical to `remove.at` for arrays.
+
+**Parameters**
+
+* `array` (Array): The source array.
+* `index` (Number): The index (key) to remove.
+
+**Returns**
+
+* (Array): A new array without the specified index.
+
+**Example**
+```javascript
+const list = ['a', 'b', 'c'];
+const result = $.data.remove.byKey(list, 1); 
+// Result: ['a', 'c']
+```
+
+---
+
+## <a id="usage-remove-byValue"></a>.remove.byValue
+
+**Description**
+Removes all elements that match a specific value exactly (using strict equality `!==`).
+
+**Parameters**
+
+* `array` (Array): The source array.
+* `value` (Any): The exact value to remove.
+
+**Returns**
+
+* (Array): A new array without the specified values.
+
+**Example**
+
+```javascript
+const nums = [1, 2, 1, 3];
+const result = $.data.remove.byValue(nums, 1); 
+// Result: [2, 3]
+```
+
+---
+
+## <a id="usage-remove-all"></a>.remove.all
+
+**Description**
+Alias for `.clear()`. Empties the array immutably.
 
 ---
 
@@ -329,4 +507,54 @@ const nums = [10, 20, 30, 40];
 const idx = $.data.find.byMatch(nums, 30);
 // Result: 2
 
+```
+
+---
+
+## <a id="usage-find-key"></a>.find.key
+
+**Description**
+Finds all indices (keys) matching the query. For arrays, keys are the indices (represented as strings). Mirrors the object API.
+
+**Parameters**
+
+* `array` (Array): The array to search.
+* `query` (String|Number): The search query.
+* `mode` (String, optional): Comparison mode: `'exact'`, `'contains'`, `'startsWith'`, `'endsWith'`. Default is `'exact'`.
+
+**Returns**
+
+* (String[]): An array of matching indices as strings.
+
+**Example**
+```javascript
+const list = ['apple', 'banana', 'apricot'];
+// Find indices containing '0'
+const indices = $.data.find.key(list, '0', 'exact');
+// Result: ['0']
+```
+
+---
+
+## <a id="usage-find-value"></a>.find.value
+
+**Description**
+Finds all values matching the query. Identical to `find.all()` for flat arrays, provided for strict API symmetry with objects.
+
+**Parameters**
+
+* `array` (Array): The array to search.
+* `query` (String|Number): The search term.
+* `mode` (String, optional): Comparison mode. Default is `'exact'`.
+
+**Returns**
+
+* (Array): An array of matching values.
+
+**Example**
+
+```javascript
+const list = ['apple', 'banana', 'apricot'];
+const matches = $.data.find.value(list, 'ap', 'startsWith');
+// Result: ['apple', 'apricot']
 ```

@@ -1,4 +1,6 @@
-* [`checked`](#usage-checked) | [`selected`](#usage-selected) | [`disabled`](#usage-disabled)
+* [`checked`](#usage-checked) | [`check`](#usage-check) | [`uncheck`](#usage-uncheck)
+* [`selected`](#usage-selected) | [`select`](#usage-select)
+* [`disabled`](#usage-disabled) | [`disable`](#usage-disable) | [`enable`](#usage-enable)
 
 ---
 
@@ -70,4 +72,94 @@ Get the disabled state of an element or set it.
 ```javascript
 $('button').disabled(true);
 
+```
+
+---
+
+## <a id="usage-check"></a>.check
+
+**Description**
+Alias for `.checked(true)`. Checks all matched checkboxes or radio buttons.
+
+**Parameters**
+* None.
+
+**Returns**
+* (jBase): Current instance for chaining.
+
+**Example**
+```javascript
+$('.terms-checkbox').check();
+```
+
+---
+
+## <a id="usage-uncheck"></a>.uncheck
+
+**Description**
+Alias for `.checked(false)`. Unchecks all matched checkboxes or radio buttons.
+
+**Parameters**
+* None.
+
+**Returns**
+* (jBase): Current instance for chaining.
+
+**Example**
+```javascript
+$('.optional-options').uncheck();
+```
+
+---
+
+## <a id="usage-select"></a>.select
+
+**Description**
+Alias for `.selected(true)`. Selects the matched `<option>` elements in a dropdown.
+
+**Parameters**
+* None.
+
+**Returns**
+* (jBase): Current instance for chaining.
+
+**Example**
+```javascript
+$('select#country option[value="DE"]').select();
+```
+
+---
+
+## <a id="usage-disable"></a>.disable
+
+**Description**
+Alias for `.disabled(true)`. Disables the matched form fields or buttons and automatically adds the `.disabled` CSS class.
+
+**Parameters**
+* None.
+
+**Returns**
+* (jBase): Current instance for chaining.
+
+**Example**
+```javascript
+$('#submit-btn').disable();
+```
+
+---
+
+## <a id="usage-enable"></a>.enable
+
+**Description**
+Alias for `.disabled(false)`. Enables the matched form fields or buttons and automatically removes the `.disabled` CSS class.
+
+**Parameters**
+* None.
+
+**Returns**
+* (jBase): Current instance for chaining.
+
+**Example**
+```javascript
+$('#submit-btn').enable();
 ```

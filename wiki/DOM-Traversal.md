@@ -79,7 +79,7 @@ $('ul.menu').children('li.active');
 ## <a id="usage-findAll"></a>.findAll
 
 **Description**
-Finds all descendant elements that match the selector. This is an alias for `find()`.
+Finds all descendant elements that match the selector.
 
 **Parameters**
 

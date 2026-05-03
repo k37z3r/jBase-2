@@ -94,3 +94,43 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Added (Upload Method)
 * **HTTP Module:** Added `$.http.upload()` method. This introduces a modern, Promise-based wrapper around `XMLHttpRequest` specifically designed for file uploads. It solves the native limitation of the `fetch` API by allowing real-time upload progress tracking via an `onProgress` callback, while maintaining the same elegant `async/await` syntax as the rest of the HTTP module.
+
+## [2.4.0] - 2026-05-03
+
+### 🚀 Added (Dynamic Routing & API Symmetry)
+* **Data Module (`data/index.ts`):** Introduced a smart, dynamic API router (Facade). You no longer need to explicitly specify `.arr` or `.obj` when calling data utilities.
+  * Methods can now be called directly on the main data namespace (e.g., `$.data.chunk()`, `$.data.remove.at()`).
+  * The framework automatically detects the input type under the hood (`Array.isArray()`) and routes the request to the correct underlying module.
+  * Full TypeScript overloads guarantee perfect IntelliSense and type safety depending on whether you pass an array or an object.
+  * *Note: Explicit calls via `.arr` and `.obj` remain fully supported for 100% backward compatibility.*
+* **Data Module (`data/objects.ts`):** Massive expansion of object utilities to mirror the array API.
+  * Added `chunk()` for objects to split a large object into an array of smaller objects (batched processing).
+  * Added `add()` for safely injecting a key-value pair at a specific index position.
+  * Added `remove.at()`, `remove.first()`, `remove.last()`, `remove.byKey()`, `remove.byValue()`, and `remove.byMatch()` to immutably remove properties from an object based on complex queries or exact matches.
+  * Added `find.all()` to return a partial object containing only the properties that match a specific query.
+  * Aliased `merge` to `mergeObjects` to ensure naming consistency across the data module.
+* **Data Module (`data/arrays.ts`):** Expanded array utilities to mirror the object API.
+  * Added `get()` and `set()` for safe, deep navigation and assignment within nested arrays.
+  * Added `find.key()` and `find.value()` to provide identical method signatures between arrays and objects.
+  * Added `pick()` and `omit()` to immutably extract or remove array elements based on a list of specific indices.
+  * Added `remove.byKey()` and `remove.byValue()` for strict API parity with object removals.
+
+### 🚀 Added (DOM Content)
+* **DOM Module (`dom/content.ts`):** Added `.load(url)` method. This provides a highly requested, classic shortcut to asynchronously fetch HTML from a server and inject it directly into the matched DOM elements. Under the hood, it seamlessly utilizes the robust `$.http.getText()` utility.
+
+### ⚡ Performance & Logic
+* **Data Module (`data/arrays.ts` & `data/objects.ts`):** 
+  * All search queries within `find` and `remove` methods are now executed in a case-insensitive manner by default.
+  * Both modules are now completely symmetrical, utilizing the same internal `MatchMode` logic (`'exact'`, `'contains'`, `'startsWith'`, `'endsWith'`) for predictable data extraction.
+
+### 🧹 Cleaned & Utility
+* **Data Module (`data/arrays.ts` & `data/objects.ts`):** 
+  * Added `clear()` (along with aliases `empty()` and `remove.all()`) to both modules. These methods provide a fast, standardized way to return a new, empty element of the respective type (`[]` or `{}`) without mutating the original data structure, adhering to the framework's functional design principles.
+* **Effects Module (`effects/fade.ts`):** Added `show()`, `hide()` and `toggle()`, as semantic aliases for `fadeIn()`, `fadeOut()` and `fadeToggle()`. This provides a more intuitive, classic API for developers used to standard DOM visibility toggling, while maintaining the smooth CSS transition logic under the hood.
+* **DOM Module (`dom/states.ts`):** Added semantic action aliases for state manipulation. You can now use `.check()`, `.uncheck()`, `.select()`, `.disable()`, and `.enable()` as highly readable, chainable alternatives to passing boolean values into `.checked()`, `.selected()`, and `.disabled()`.
+
+### 🛡️ Secured (XSS Protection & Architecture)
+* **Core Utilities (`utils.ts`):** Introduced a centralized, high-performance XSS sanitizer (`sanitizeDangerousAttributes`). This internal utility aggressively strips dangerous inline event handlers (like `onerror`) and malicious protocols (like `href="javascript:..."`) from raw HTML strings.
+* **Core (`core.ts`):** Hardened the main `jBase` constructor. Creating new DOM elements via `$('<div...>')` now passes the string through the central sanitizer, ensuring "secure-by-default" behavior even when handling untrusted user input.
+* **DOM Manipulation (`dom/manipulation.ts`):** Secured all structural insertion methods (`append`, `prepend`, `before`, `after`, `wrap`, and `replaceWith`). Any raw HTML strings passed into these methods are now automatically sanitized before being injected into the DOM, closing the backdoor for XSS injections.
+* **DOM Content (`dom/content.ts`):** Completely overhauled the injection logic for `.html()` and `.load()`. They now inherit the strict XSS sanitization by default. To maintain full framework flexibility for trusted sources, we introduced the `{ executeScripts: true }` bypass, which safely extracts, injects, and evaluates embedded `<script>` tags on demand.

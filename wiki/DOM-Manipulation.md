@@ -173,13 +173,11 @@ Replace each element in the set of matched elements with the provided new conten
 
 **Returns**
 
-* (jBase): The new content.
+* (jBase): Current instance (the old, detached elements).
 
 **Example**
-
 ```javascript
 $('.old-element').replaceWith('<div class="new-element">Updated</div>');
-
 ```
 
 ---
@@ -224,6 +222,48 @@ Insert every element in the set of matched elements to the beginning of the targ
 ```javascript
 $('<p>Intro</p>').prependTo('body');
 
+```
+
+---
+
+## <a id="usage-insertBefore"></a>.insertBefore
+
+**Description**
+Insert every element in the set of matched elements immediately before the target element.
+
+**Parameters**
+
+* `target` (String|HTMLElement): A CSS selector or DOM element before which the content will be inserted.
+
+**Returns**
+
+* (jBase): Current instance.
+
+**Example**
+
+```javascript
+$('<p>New Alert</p>').insertBefore('#main-content');
+```
+
+---
+
+## <a id="usage-insertAfter"></a>.insertAfter
+
+**Description**
+Insert every element in the set of matched elements immediately after the target element.
+
+**Parameters**
+
+* `target` (String|HTMLElement): A CSS selector or DOM element after which the content will be inserted.
+
+**Returns**
+
+* (jBase): Current instance.
+
+**Example**
+
+```javascript
+$('<span>* Required</span>').insertAfter('input.required');
 ```
 
 ---

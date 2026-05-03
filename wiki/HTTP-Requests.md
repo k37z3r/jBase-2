@@ -30,7 +30,7 @@ $.http.get('[https://api.example.com/users](https://api.example.com/users)')
 
 ---
 
-## <a id="usage-http-getText"></a>getText
+## <a id="usage-http-getText"></a>.getText
 
 **Description**
 Performs an asynchronous HTTP GET request. This method expects a raw text or HTML response and does not attempt to parse it as JSON. Ideal for loading HTML templates (Server-Side Rendering Partials) or config files. Includes an automatic timeout of 5000ms.
@@ -55,7 +55,7 @@ $.http.getText('/partials/footer.html')
 
 ---
 
-## <a id="usage-http-post"></a>post
+## <a id="usage-http-post"></a>.post
 
 **Description**
 Performs an asynchronous HTTP POST request to submit data to a server. The body is automatically stringified to JSON, and the `Content-Type` is set to `application/json`. Includes an automatic timeout of 5000ms.
@@ -91,20 +91,29 @@ $.http.post('/api/register', payload)
 
 ---
 
-## <a id="usage-http-upload"></a>upload
+## <a id="usage-http-upload"></a>.upload
 
 **Description**
-The native `fetch` API currently lacks the ability to track upload progress. To solve this, jBase provides `$.http.upload()`. This method acts as a modern, Promise-based wrapper around `XMLHttpRequest`. It gives you the elegant, asynchronous chaining you expect from `fetch`, but includes full real-time progress tracking for multipart/form-data uploads.
+Performs a `multipart/form-data` upload with precise progress tracking. It uses `XMLHttpRequest` under the hood because the native `fetch` API lacks upload progress support. 
+
+It seamlessly accepts either a single `File` object (which is automatically wrapped for you) or a pre-populated `FormData` object (ideal for multi-file uploads and adding extra fields).
 
 **Parameters**
-* `url` (String): The target API endpoint.
-* `data` (File | FormData): The payload to upload. If a single `File` object is provided, jBase automatically wraps it into a `FormData` object under the key `'file'`.
-* `onProgress` (Function, optional): A callback function triggered during the upload. Receives three arguments: `percentage` (0-100), `loaded` (bytes transferred), and `total` (total bytes).
+
+* `url` (String): The target endpoint.
+* `data` (FormData | File): The data to upload. If a single `File` is provided, jBase automatically wraps it in a `FormData` object under the key `'file'`.
+* `onProgress` (Function, optional): A callback function that triggers repeatedly during the upload.
+  * `percentage` (Number): The rounded progress percentage (0-100).
+  * `loaded` (Number): The amount of bytes loaded so far.
+  * `total` (Number): The total amount of bytes to upload.
 
 **Returns**
-* (Promise): Resolves to the parsed JSON response from the server (or text if parsing fails).
 
-**Example**
+* (Promise<any>): A Promise resolving to the parsed JSON response (or plain text if parsing fails).
+
+**Examples**
+
+**1. Single File Upload with a UI Progress Bar**
 ```javascript
 // Grab a file from an input field
 const file = $('#file-input').prop('files')[0];
@@ -123,5 +132,28 @@ if (file) {
     } catch (error) {
         console.error('Upload failed:', error.message);
     }
+}
+```
+
+**2. Multi-File Upload using FormData**
+```javascript
+const fileInput = $('#gallery-upload')[0];
+
+if (fileInput && fileInput.files.length > 0) {
+    const formData = new FormData();
+
+    // Append all selected files to the FormData object.
+    // The '[]' in the key tells the server to expect an array of files.
+    $.each(fileInput.files, (index, file) => {
+        formData.append('images[]', file);
+    });
+
+    // You can also append regular text fields!
+    formData.append('albumId', '12345');
+
+    // Upload the entire FormData object
+    await $.http.upload('/api/gallery', formData, (percentage) => {
+        console.log(`Total Upload Progress: ${percentage}%`);
+    });
 }
 ```

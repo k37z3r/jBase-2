@@ -1,8 +1,8 @@
-* [`fadeIn`](#usage-fadeIn) | [`fadeOut`](#usage-fadeOut) | [`fadeToggle`](#usage-fadeToggle)
+* [`fadeIn` / `show`](#usage-fadeIn) | [`fadeOut` / `hide`](#usage-fadeOut) | [`fadeToggle`](#usage-fadeToggle)
 
 ---
 
-## <a id="usage-fadeIn"></a>.fadeIn
+## <a id="usage-fadeIn"></a>.fadeIn (Alias: .show)
 
 **Description**
 Display the matched elements by fading them to opaque (opacity: 1).
@@ -22,11 +22,14 @@ $('div.hidden').fadeIn({ duration: 600, displayType: 'flex' }, function() {
     console.log('Animation complete.');
 });
 
+// Use the alias with custom settings
+$('.modal').show({ duration: 500, displayType: 'flex' });
+
 ```
 
 ---
 
-## <a id="usage-fadeOut"></a>.fadeOut
+## <a id="usage-fadeOut"></a>.fadeOut (Alias: .hide)
 
 **Description**
 Hide the matched elements by fading them to transparent (opacity: 0). Once complete, the display property is often set to 'none'.
@@ -44,6 +47,9 @@ Hide the matched elements by fading them to transparent (opacity: 0). Once compl
 
 ```javascript
 $('.alert-box').fadeOut({ duration: 300 });
+
+// Use the alias with custom duration
+$('.modal').hide({ duration: 500 });
 
 ```
 

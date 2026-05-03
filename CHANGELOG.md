@@ -134,3 +134,7 @@ All notable changes to this project will be documented in this file.
 * **Core (`core.ts`):** Hardened the main `jBase` constructor. Creating new DOM elements via `$('<div...>')` now passes the string through the central sanitizer, ensuring "secure-by-default" behavior even when handling untrusted user input.
 * **DOM Manipulation (`dom/manipulation.ts`):** Secured all structural insertion methods (`append`, `prepend`, `before`, `after`, `wrap`, and `replaceWith`). Any raw HTML strings passed into these methods are now automatically sanitized before being injected into the DOM, closing the backdoor for XSS injections.
 * **DOM Content (`dom/content.ts`):** Completely overhauled the injection logic for `.html()` and `.load()`. They now inherit the strict XSS sanitization by default. To maintain full framework flexibility for trusted sources, we introduced the `{ executeScripts: true }` bypass, which safely extracts, injects, and evaluates embedded `<script>` tags on demand.
+
+### 📚 Documentation & Developer Experience
+* **HTTP Module (`http/get.ts`, `http/post.ts`):** Harmonized JSDoc comments and added practical, framework-native examples (using `$` instead of vanilla `querySelector`), perfectly matching the updated `upload` method documentation.
+* **DOM States (`dom/states.ts`):** Cleaned up internal typings and refined JSDoc descriptions for attribute and class manipulation methods to guarantee a consistent developer experience across the entire DOM API.

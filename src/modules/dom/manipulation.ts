@@ -1,6 +1,6 @@
 /**
  * @file src/modules/dom/manipulation.ts
- * @version 2.0.3
+ * @version 2.0.4
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -16,6 +16,7 @@
 
 import { each } from 'src/utils';
 import { jBase } from '../../core';
+import { sanitizeDangerousAttributes } from '../../utils';
 
 /**
  * * Internal Helper: Parses a raw HTML string into a DOM element using a temporary container.^
@@ -26,7 +27,7 @@ import { jBase } from '../../core';
  */
 function parseHTML(html: string, doc: Document): HTMLElement {
     const tmp = doc.createElement('div');
-    tmp.innerHTML = html.trim();
+    tmp.innerHTML = sanitizeDangerousAttributes(html.trim());
     return tmp.firstElementChild as HTMLElement;
 }
 
@@ -59,7 +60,7 @@ function normalizeToFragment(content: string | Node | jBase | (string | Node)[],
     const add = (item: any) => {
         if (typeof item === 'string') {
             const temp = doc.createElement('div');
-            temp.innerHTML = item.trim();
+            temp.innerHTML = sanitizeDangerousAttributes(item.trim());
             while (temp.firstChild) {
                 fragment.appendChild(temp.firstChild);
             }
@@ -124,9 +125,10 @@ export function replaceWithClone(this: jBase): jBase {
  */
 export function append(this: jBase, content: string | Node | jBase): jBase {
     if (typeof content === 'string') {
+        const safeContent = sanitizeDangerousAttributes(content);
         this.each(function(el) {
             if (el instanceof Element) {
-                el.insertAdjacentHTML('beforeend', content);
+                el.insertAdjacentHTML('beforeend', safeContent);
             }
         });
         return this;
@@ -153,9 +155,10 @@ export function append(this: jBase, content: string | Node | jBase): jBase {
  */
 export function prepend(this: jBase, content: string | Node | jBase): jBase {
     if (typeof content === 'string') {
+        const safeContent = sanitizeDangerousAttributes(content);
         this.each(function(el) {
             if (el instanceof Element) {
-                el.insertAdjacentHTML('afterbegin', content);
+                el.insertAdjacentHTML('afterbegin', safeContent);
             }
         });
         return this;
@@ -182,9 +185,10 @@ export function prepend(this: jBase, content: string | Node | jBase): jBase {
  */
 export function before(this: jBase, content: string | Node | jBase): jBase {
     if (typeof content === 'string') {
+        const safeContent = sanitizeDangerousAttributes(content);
         this.each(function(el) {
             if (el instanceof Element) {
-                el.insertAdjacentHTML('beforebegin', content);
+                el.insertAdjacentHTML('beforebegin', safeContent);
             }
         });
         return this;
@@ -211,9 +215,10 @@ export function before(this: jBase, content: string | Node | jBase): jBase {
  */
 export function after(this: jBase, content: string | Node | jBase): jBase {
     if (typeof content === 'string') {
+        const safeContent = sanitizeDangerousAttributes(content);
         this.each(function(el) {
             if (el instanceof Element) {
-                el.insertAdjacentHTML('afterend', content);
+                el.insertAdjacentHTML('afterend', safeContent);
             }
         });
         return this;

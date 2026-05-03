@@ -13,6 +13,7 @@
  */
 
 import { JBaseElement, JBaseInput } from './types';
+import { sanitizeDangerousAttributes } from './utils';
 
 /**
  * * The core class of the framework, inheriting from the native Array class. Acts as a wrapper around DOM elements and enables chainable methods (Fluent Interface).
@@ -58,7 +59,7 @@ export class jBase extends Array<JBaseElement> {
             const trimmed = selector.trim();
             if (trimmed.startsWith('<') && trimmed.endsWith('>')) {
                 const tempDiv = this.doc.createElement('div');
-                tempDiv.innerHTML = trimmed;
+                tempDiv.innerHTML = sanitizeDangerousAttributes(trimmed);
                 this.push(...Array.from(tempDiv.children));
             }
             else if (trimmed.startsWith('#') && !trimmed.includes(' ') && !trimmed.includes('.')) {

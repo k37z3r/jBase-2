@@ -1,6 +1,6 @@
 /**
  * @file src/utils.ts
- * @version 2.1.0
+ * @version 2.2.0
  * @since 2.0.0
  * @license GPL-3.0-or-later
  * @copyright Sven Minio 2026
@@ -90,4 +90,16 @@ export function each<T>(collection: T[] | ArrayLike<T> | Record<string, T>, call
         }
     }
     return collection as any;
+}
+
+/**
+ * * Internal Helper: Sanitizes an HTML string by removing dangerous attributes.
+ * * Strips inline event handlers and javascript: protocols to mitigate XSS.
+ * @param htmlStr The raw HTML string.
+ * @returns The sanitized HTML string.
+ */
+export function sanitizeDangerousAttributes(htmlStr: string): string {
+    let cleanStr = htmlStr.replace(/on\w+\s*=\s*(['"])(?:(?!\1).)*\1/gi, '');
+    cleanStr = cleanStr.replace(/(href|action)\s*=\s*(['"])\s*javascript\s*:[\s\S]*?\2/gi, '');
+    return cleanStr;
 }

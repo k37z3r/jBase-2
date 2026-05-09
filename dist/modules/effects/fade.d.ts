@@ -21,26 +21,30 @@ import { FadeOptions } from './types';
  * * Fades an element in (Opacity 0 -> 1).
  * @example fadeIn() => Fades in all matched elements over 300ms with display: block.
  * @example fadeIn({ duration: 500, displayType: 'inline-block' }) => Fades in all matched elements over 500ms with display: inline-block.
+ * @example fadeIn(500) => Fades in over 500ms.
  * @param options Duration in ms (default: 300) and display type (default: 'block').
  * @returns The current jBase instance.
  */
-export declare function fadeIn(this: jBase, options?: FadeOptions): jBase;
+export declare function fadeIn(this: jBase, options?: FadeOptions | number): jBase;
 /**
  * * Fades an element out (Opacity 1 -> 0) and sets display: none afterwards.
  * @example fadeOut() => Fades out all matched elements over 300ms with display: none.
  * @example fadeOut({ duration: 500 }) => Fades out all matched elements over 500ms with display: none.
+ * @example fadeOut(500) => Fades out over 500ms.
  * @param options Duration in ms (default: 300).
  * @returns The current jBase instance.
  */
-export declare function fadeOut(this: jBase, options?: FadeOptions): jBase;
+export declare function fadeOut(this: jBase, options?: FadeOptions | number): jBase;
 /**
  * * Toggles between fadeIn and fadeOut based on the current display state.
  * @example fadeToggle() => Fades in hidden elements and fades out visible elements over 300ms.
  * @example fadeToggle({ duration: 500 }) => Fades in hidden elements and fades out visible elements over 500ms.
+ * @example fadeToggle({ duration: 500, displayType: 'inline-block' }) => Fades in all matched elements over 500ms with display: inline-block.
+ * @example fadeToggle(500) => Fades in over 500ms.
  * @param options Animation options.
  * @returns The current jBase instance.
  */
-export declare function fadeToggle(this: jBase, options?: FadeOptions): jBase;
+export declare function fadeToggle(this: jBase, options?: FadeOptions | number): jBase;
 /**
  * * ALIAS for fadeIn.
  */

@@ -20,9 +20,9 @@ import * as fadeMethods from './fade';
  * * Aggregation of all visual effect methods. Bundles sliding and fading animations to extend the jBase prototype.
  */
 export declare const effectMethods: {
-    fadeIn(this: import("../..").JBaseClass, options?: import("./types").FadeOptions): import("../..").JBaseClass;
-    fadeOut(this: import("../..").JBaseClass, options?: import("./types").FadeOptions): import("../..").JBaseClass;
-    fadeToggle(this: import("../..").JBaseClass, options?: import("./types").FadeOptions): import("../..").JBaseClass;
+    fadeIn(this: import("../..").JBaseClass, options?: import("./types").FadeOptions | number): import("../..").JBaseClass;
+    fadeOut(this: import("../..").JBaseClass, options?: import("./types").FadeOptions | number): import("../..").JBaseClass;
+    fadeToggle(this: import("../..").JBaseClass, options?: import("./types").FadeOptions | number): import("../..").JBaseClass;
     show: typeof fadeMethods.fadeIn;
     hide: typeof fadeMethods.fadeOut;
     toggle: typeof fadeMethods.fadeToggle;

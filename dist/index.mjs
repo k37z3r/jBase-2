@@ -1540,11 +1540,14 @@ __export(fade_exports, {
   toggle: () => toggle
 });
 function fadeIn(options = {}) {
-  if (!isBrowser())
-    return this;
-  const { duration = 300, displayType = "block" } = options;
+  if (!isBrowser()) return this;
+  const duration = typeof options === "number" ? options : options.duration || 300;
+  const displayType = typeof options === "object" && options.displayType ? options.displayType : "block";
   this.each(function(el) {
     if (el instanceof HTMLElement) {
+      if (el._jbaseFadeTimer) {
+        clearTimeout(el._jbaseFadeTimer);
+      }
       el.style.opacity = "0";
       el.style.display = displayType;
       el.style.transition = `opacity ${duration}ms ease-in-out`;
@@ -1552,37 +1555,40 @@ function fadeIn(options = {}) {
       requestAnimationFrame(() => {
         el.style.opacity = "1";
       });
-      setTimeout(() => {
+      el._jbaseFadeTimer = setTimeout(() => {
         el.style.transition = "";
+        delete el._jbaseFadeTimer;
       }, duration);
     }
   });
   return this;
 }
 function fadeOut(options = {}) {
-  if (!isBrowser())
-    return this;
-  const { duration = 300 } = options;
+  if (!isBrowser()) return this;
+  const duration = typeof options === "number" ? options : options.duration || 300;
   this.each(function(el) {
     if (el instanceof HTMLElement) {
+      if (el._jbaseFadeTimer) {
+        clearTimeout(el._jbaseFadeTimer);
+      }
       el.style.opacity = "1";
       el.style.transition = `opacity ${duration}ms ease-in-out`;
       void el.offsetHeight;
       requestAnimationFrame(() => {
         el.style.opacity = "0";
       });
-      setTimeout(() => {
+      el._jbaseFadeTimer = setTimeout(() => {
         el.style.display = "none";
         el.style.transition = "";
+        delete el._jbaseFadeTimer;
       }, duration);
     }
   });
   return this;
 }
 function fadeToggle(options = {}) {
-  if (!isBrowser())
-    return this;
-  this.each(function(el) {
+  if (!isBrowser()) return this;
+  this.each((el) => {
     if (el instanceof HTMLElement) {
       const display = window.getComputedStyle(el).display;
       const wrapper = new this.constructor(el);

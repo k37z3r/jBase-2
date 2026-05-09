@@ -127,3 +127,4 @@ $('#btn').trigger('click');
 // Trigger a custom event with data
 $('.user-card').on('user:update', (e) => console.log(e.detail.id));
 $('.user-card').trigger('user:update', { id: 42 });
+```

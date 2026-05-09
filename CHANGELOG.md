@@ -138,3 +138,20 @@ All notable changes to this project will be documented in this file.
 ### 📚 Documentation & Developer Experience
 * **HTTP Module (`http/get.ts`, `http/post.ts`):** Harmonized JSDoc comments and added practical, framework-native examples (using `$` instead of vanilla `querySelector`), perfectly matching the updated `upload` method documentation.
 * **DOM States (`dom/states.ts`):** Cleaned up internal typings and refined JSDoc descriptions for attribute and class manipulation methods to guarantee a consistent developer experience across the entire DOM API.
+
+## [2.4.1] - 2026-05-09
+
+### 🚀 Features & Enhancements
+* **Effects (Global Easing):** Added support for custom `easing` properties (e.g., `'linear'`, `'cubic-bezier'`) across all animation modules (Fade, Slide, Vertical), giving developers full control over transition timing.
+* **Effects (Global Bounce):** Introduced a new `bounce: true` option across all effects. 
+  * *Fade:* Applies a snappy scale-spring effect. 
+  * *Slide:* Applies a `back-in`/`back-out` cubic-bezier curve, making menus physically hit the edge. 
+  * *Vertical:* Intelligently utilizes specific curves for a smooth accordion-spring effect.
+* **Developer Experience (Shorthand Syntax):** All effect methods (`fadeIn`, `fadeOut`, `fadeToggle`, `show`, `hide`, `toggle`, `slideIn`, `slideOut`, `slideToggle`, `slideDown`, `slideUp`, `slideToggleBox`) now accept a primitive `number` (duration in ms) as a direct argument (e.g., `$('main').hide(500)`). This restores classic, rapid-prototyping shorthand syntax while maintaining full configuration object support.
+* **Types:** Expanded `FadeOptions`, `SlideOptions`, and `SlideVerticalOptions` interfaces to support the new `easing` and `bounce` properties safely.
+
+### 🐛 Bug Fixes
+* **Effects (Core Architecture):** Fixed a critical `TypeError: Failed to construct 'HTMLElement': Illegal constructor` exception across all toggle methods (`fadeToggle`, `slideToggle`, `slideToggleBox`). This was resolved by adopting modern ES6 arrow functions to ensure proper `this` context binding within iteration loops.
+* **Effects (Race Conditions):** Resolved the notorious "ghost timer" bug. Rapidly overlapping animation calls (e.g., fast toggling of menus or dropdowns) caused elements to unexpectedly revert to `display: none` or stutter. Animation timers are now strictly tracked and cleared on a per-element basis across all modules.
+* **Effects (Slide):** Fixed a logical bug in `slideIn` where the `direction` parameter was completely ignored. Elements are now correctly pre-positioned off-canvas (`-100%` or `100%`) before the slide transition begins.
+* **Effects (Vertical):** Resolved an issue where interrupting an active vertical slide caused the framework to incorrectly bail out due to static `display` state checks. Animations can now be smoothly reversed mid-flight.
